@@ -192,9 +192,9 @@
             const sorted = Object.values(groups).sort((a, b) => {
                 if (a.date === '') return 1;  // unknown last
                 if (b.date === '') return -1;
-                // Descending: b > a means b comes first
-                if (b.date > a.date) return -1;
-                if (b.date < a.date) return 1;
+                // Descending: a > b means a comes first (newer date)
+                if (a.date > b.date) return -1;
+                if (a.date < b.date) return 1;
                 return 0;
             });
 
