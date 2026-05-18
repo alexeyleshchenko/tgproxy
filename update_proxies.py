@@ -38,7 +38,7 @@ def is_valid(url):
         return False
     if 'server=' not in url or 'port=' not in url:
         return False
-    bad = ['*', '**|', '**)', '..', ' ', 'undefined', '`']
+    bad = ['*', '**|', '**)', '..', ' ', 'undefined', '`', ')']
     for p in bad:
         if p in url:
             return False
