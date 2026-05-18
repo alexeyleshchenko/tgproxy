@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Proxy List — tgproxy.l1979.ru</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYqk5yF2o5pkX5cMkHSk" crossorigin="anonymous"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #4fc3f7;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .proxy-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .proxy-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #16213e;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+        }
+        .proxy-url {
+            flex: 1;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #81d4fa;
+            word-break: break-all;
+        }
+        .copy-btn {
+            background: #4fc3f7;
+            color: #1a1a2e;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            min-width: 80px;
+        }
+        .copy-btn:hover {
+            background: #29b6f6;
+        }
+        .copy-btn.copied {
+            background: #66bb6a;
+        }
+        .empty {
+            text-align: center;
+            color: #888;
+            padding: 2rem;
+        }
+        .count {
+            text-align: center;
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 Telegram Proxy List</h1>
+        <p class="subtitle">Auto-updated daily from @telemtrs — Free proxy topic</p>
+        <p class="count" id="count"></p>
+        <div class="proxy-list" id="proxy-list">
+            <div class="empty">Loading proxies...</div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 1500);
+            }).catch(err => {
+                btn.textContent = 'Error';
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                }, 1500);
+            });
+        }
+
+        document.body.addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.target.id === 'proxy-list') {
+                const lines = event.detail.xhr.responseText.trim().split('\n').filter(l => l.trim());
+                document.getElementById('count').textContent = lines.length + ' proxy(ies)';
+            }
+        });
+    </script>
+
+    <div hx-get="https://raw.githubusercontent.com/leshchenko1979/tgproxy/main/proxies.txt"
+         hx-trigger="load"
+         hx-target="#proxy-list"
+         hx-swap="innerHTML"
+         hx-on::after-request="this.remove()">
+    </div>
+
+    <script id="proxy-template" type="text/template">
+        <div class="proxy-item">
+            <a class="proxy-url" href="{{url}}" target="_blank">{{url}}</a>
+            <button class="copy-btn" onclick="copyToClipboard('{{url}}', this)">Copy</button>
+        </div>
+    </script>
+
+    <script>
+        async function loadProxies() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/leshchenko1979/tgproxy/main/proxies.txt');
+                const text = await response.text();
+                const lines = text.trim().split('\n').filter(l => l.trim());
+                
+                const container = document.getElementById('proxy-list');
+                document.getElementById('count').textContent = lines.length + ' proxy(ies)';
+                
+                if (lines.length === 0) {
+                    container.innerHTML = '<div class="empty">No proxies found yet.</div>';
+                    return;
+                }
+                
+                container.innerHTML = lines.map(url => {
+                    const safeUrl = url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return '<div class="proxy-item">' +
+                        '<a class="proxy-url" href="' + safeUrl + '" target="_blank">' + url + '</a>' +
+                        '<button class="copy-btn" onclick="copyToClipboard(\'' + safeUrl + '\', this)">Copy</button>' +
+                        '</div>';
+                }).join('');
+            } catch (err) {
+                document.getElementById('proxy-list').innerHTML = '<div class="empty">Failed to load proxies.</div>';
+            }
+        }
+        loadProxies();
+    </script>
+</body>
+</html>
