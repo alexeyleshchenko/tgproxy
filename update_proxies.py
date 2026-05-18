@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """
-Update proxies — read from docs/proxies.txt, normalize all to tg://proxy? format, filter bad.
+Update proxies — read from docs/proxies.txt, normalize all to tg://proxy? format, filter bad, preserve timestamps.
 """
 import re
 from pathlib import Path
 
 PROXIES_FILE = Path(__file__).parent / "docs" / "proxies.txt"
 
-def strip_timestamp(url):
-    """Remove |2026-... timestamp suffix."""
-    return re.sub(r'\|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.*$', '', url)
+def extract_timestamp(url):
+    """Split URL and timestamp. Returns (url, timestamp)."""
+    url = url.strip()
+    # Match |2026-... or |2025-... suffix
+    m = re.search(r'\|(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^|]*)$', url)
+    if m:
+        return url[:m.start()], m.group(1)
+    return url, None
 
 def normalize_url(url):
     """Convert URL to tg://proxy format."""
-    url = url.strip()
     if not url:
         return None
 
@@ -34,12 +38,10 @@ def is_valid(url):
         return False
     if 'server=' not in url or 'port=' not in url:
         return False
-    bad = ['*', '**|', '**)', '..', ' ', 'undefined', '`', ')']
+    bad = ['*', '**|', '**)', '..', ' ', 'undefined', '`']
     for p in bad:
         if p in url:
             return False
-    # Strip trailing ) or `
-    url = url.rstrip(')`')
     return True
 
 def main():
@@ -48,17 +50,20 @@ def main():
 
     normalized = []
     for line in lines:
-        url = strip_timestamp(line)
+        url, ts = extract_timestamp(line)
         url = normalize_url(url)
         if is_valid(url):
+            if ts:
+                url = f"{url}|{ts}"
             normalized.append(url)
 
-    # Deduplicate, preserve order
+    # Deduplicate by (url_base_without_timestamp), preserve order of first seen
     seen = set()
     unique = []
     for u in normalized:
-        if u not in seen:
-            seen.add(u)
+        url_base, _ = extract_timestamp(u)
+        if url_base not in seen:
+            seen.add(url_base)
             unique.append(u)
 
     PROXIES_FILE.write_text('\n'.join(unique) + '\n')
