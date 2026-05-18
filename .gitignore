@@ -10,4 +10,9 @@ build/
 .venv/
 venv/
 .DS_Store
+*.log
+*.swp
+*~
+.mypy_cache/
+.pytest_cache/
 REVIEW.md

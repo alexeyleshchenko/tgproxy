@@ -14,7 +14,7 @@ from datetime import date
 
 # === CONFIG ===
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
-PROXIES_FILE = os.path.join(REPO_DIR, 'proxies.txt')
+PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
 MCP_URL = os.environ.get('MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
 MCP_TOKEN = os.environ.get('TG_MCP_TOKEN')
 TELEGRAM_CHAT = 'telemtrs'
@@ -71,8 +71,12 @@ def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
                             content = data['result'].get('content', [])
                             for item in content:
                                 if item.get('type') == 'text':
-                                    inner = json.loads(item['text'])
-                                    if 'messages' in inner:
+                                    inner = None
+                                    try:
+                                        inner = json.loads(item['text'])
+                                    except (json.JSONDecodeError, TypeError, KeyError):
+                                        continue
+                                    if inner and 'messages' in inner:
                                         return inner['messages']
                 return []
         except urllib.error.HTTPError as e:
