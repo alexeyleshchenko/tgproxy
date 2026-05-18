@@ -23,6 +23,7 @@ TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
 PROXY_PATTERN = re.compile(
     r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
+    r'|tg://proxy\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
 )
 # ISO format for timestamps
 TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
@@ -231,12 +232,11 @@ def git_add_commit_push() -> bool:
 def main():
     check_token()
 
-    print('Fetching proxies from Telegram topic...')
+    print('Fetching proxies from Telegram...')
     messages = mcp_call('get_messages', {
         'chat_id': TELEGRAM_CHAT,
-        'reply_to_id': TOPIC_ID,
-        'query': 't.me',
-        'limit': 100
+        'query': 'proxy',
+        'limit': 200
     })
 
     if not messages:
