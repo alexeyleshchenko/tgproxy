@@ -37,6 +37,26 @@
             flex-direction: column;
             gap: 0.75rem;
         }
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0 0.75rem;
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .date-divider::before,
+        .date-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #333;
+        }
+        .date-divider-text {
+            color: #4fc3f7;
+            white-space: nowrap;
+        }
         .proxy-item {
             display: flex;
             align-items: center;
@@ -102,6 +122,85 @@
     </div>
 
     <script>
+        const MONTHS = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        function formatDate(dateStr) {
+            // dateStr is YYYY-MM-DD
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return MONTHS[month - 1] + ' ' + day + ', ' + year;
+        }
+
+        function parseProxies(lines) {
+            // Returns array of {url, timestamp, date} objects
+            // timestamp is ISO string YYYY-MM-DDTHH:MM:SS or empty
+            // date is YYYY-MM-DD or empty string
+            const result = [];
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                let url, timestamp;
+                if (trimmed.includes('|')) {
+                    const lastSep = trimmed.lastIndexOf('|');
+                    url = trimmed.substring(0, lastSep);
+                    timestamp = trimmed.substring(lastSep + 1);
+                } else {
+                    url = trimmed;
+                    timestamp = '';
+                }
+
+                const date = timestamp ? timestamp.substring(0, 10) : '';
+                result.push({ url, timestamp, date });
+            }
+            return result;
+        }
+
+        function groupByDate(proxies) {
+            // Groups proxies by date, sorts groups by date DESC
+            // Returns array of {date, label, proxies} where date is YYYY-MM-DD or '' for unknown
+            const groups = {};
+            const today = new Date().toISOString().substring(0, 10);
+            const yesterday = new Date(Date.now() - 86400000).toISOString().substring(0, 10);
+
+            for (const p of proxies) {
+                let label;
+                if (!p.date) {
+                    label = 'Unknown date';
+                } else if (p.date === today) {
+                    label = 'Today';
+                } else if (p.date === yesterday) {
+                    label = 'Yesterday';
+                } else {
+                    label = formatDate(p.date);
+                }
+
+                if (!groups[label]) {
+                    groups[label] = {
+                        date: p.date || '',
+                        label: label,
+                        proxies: []
+                    };
+                }
+                groups[label].proxies.push(p);
+            }
+
+            // Sort groups by date DESC (newest first)
+            // Unknown date goes last
+            const sorted = Object.values(groups).sort((a, b) => {
+                if (a.date === '') return 1;  // unknown last
+                if (b.date === '') return -1;
+                // Descending: b > a means b comes first
+                if (b.date > a.date) return -1;
+                if (b.date < a.date) return 1;
+                return 0;
+            });
+
+            return sorted;
+        }
+
         async function loadProxies() {
             const container = document.getElementById('proxy-list');
             const countEl = document.getElementById('count');
@@ -112,36 +211,50 @@
                     throw new Error('Failed to fetch: ' + response.status);
                 }
                 const text = await response.text();
-                const lines = text.trim().split('\n').filter(l => l.trim());
+                const lines = text.trim().split('\n');
 
-                countEl.textContent = lines.length + ' proxy(ies)';
+                const proxies = parseProxies(lines);
+                const groups = groupByDate(proxies);
 
-                if (lines.length === 0) {
+                const totalProxies = proxies.length;
+                countEl.textContent = totalProxies + ' proxy(ies)';
+
+                if (totalProxies === 0) {
                     container.innerHTML = '<div class="state">No proxies yet. Check back later.</div>';
                     return;
                 }
 
                 container.innerHTML = '';
-                for (const url of lines) {
-                    const item = document.createElement('div');
-                    item.className = 'proxy-item';
 
-                    const link = document.createElement('a');
-                    link.className = 'proxy-url';
-                    link.href = url;
-                    link.target = '_blank';
-                    link.rel = 'noopener noreferrer';
-                    link.textContent = url;
+                for (const group of groups) {
+                    // Add date divider
+                    const divider = document.createElement('div');
+                    divider.className = 'date-divider';
+                    divider.innerHTML = '<span class="date-divider-text">' + group.label + '</span>';
+                    container.appendChild(divider);
 
-                    const btn = document.createElement('button');
-                    btn.className = 'copy-btn';
-                    btn.setAttribute('aria-label', 'Copy proxy URL');
-                    btn.dataset.url = url;
-                    btn.textContent = 'Copy';
+                    // Add proxies in this group (already sorted by timestamp DESC within group)
+                    for (const p of group.proxies) {
+                        const item = document.createElement('div');
+                        item.className = 'proxy-item';
 
-                    item.appendChild(link);
-                    item.appendChild(btn);
-                    container.appendChild(item);
+                        const link = document.createElement('a');
+                        link.className = 'proxy-url';
+                        link.href = p.url;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.textContent = p.url;
+
+                        const btn = document.createElement('button');
+                        btn.className = 'copy-btn';
+                        btn.setAttribute('aria-label', 'Copy proxy URL');
+                        btn.dataset.url = p.url;
+                        btn.textContent = 'Copy';
+
+                        item.appendChild(link);
+                        item.appendChild(btn);
+                        container.appendChild(item);
+                    }
                 }
             } catch (err) {
                 countEl.textContent = '';

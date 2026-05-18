@@ -2,6 +2,7 @@
 """
 Update Telegram proxy list from @telemtrs Free proxy topic.
 Reads TG_MCP_TOKEN from environment variable.
+Stores proxies with timestamps: URL|YYYY-MM-DDTHH:MM:SS
 """
 
 import json
@@ -10,10 +11,10 @@ import re
 import subprocess
 import sys
 import tempfile
-from datetime import date
+from datetime import date, datetime
 
 # === CONFIG ===
-REPO_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
 MCP_URL = os.environ.get('MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
 MCP_TOKEN = os.environ.get('TG_MCP_TOKEN')
@@ -23,6 +24,8 @@ MAX_PROXIES = 30
 PROXY_PATTERN = re.compile(
     r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
 )
+# ISO format for timestamps
+TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 
 def die(msg):
@@ -54,7 +57,7 @@ def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
         headers={
             'Authorization': f'Bearer {MCP_TOKEN}',
             'Content-Type': 'application/json',
-            'Accept': 'text/event-stream'
+            'Accept': 'application/json, text/event-stream'
         },
         method='POST'
     )
@@ -95,31 +98,91 @@ def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
     return []
 
 
+def parse_timestamp(msg: dict) -> str:
+    """Extract timestamp from message date field, return ISO string or empty string."""
+    # Telegram message has 'date' as unix timestamp or ISO string depending on MCP response format
+    raw = msg.get('date')
+    if not raw:
+        return ''
+    # Try ISO string first
+    if isinstance(raw, str):
+        try:
+            ts = raw
+            if ts[-1] != 'Z' and '+' not in ts:
+                ts = ts + 'Z'
+            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+            return dt.strftime(TS_FORMAT)
+        except Exception:
+            pass
+    # Try unix timestamp
+    try:
+        dt = datetime.fromtimestamp(float(raw))
+        return dt.strftime(TS_FORMAT)
+    except Exception:
+        pass
+    return ''
+
+
 def extract_proxies(messages: list) -> list:
-    """Extract unique proxy URLs from messages, sorted for determinism."""
-    found = set()
+    """
+    Extract unique proxy URLs from messages with timestamps.
+    Returns list of (url, timestamp) tuples.
+    Sorts by timestamp DESC for determinism.
+    """
+    found = {}  # url -> timestamp (keep first/most recent)
     for msg in messages:
         text = msg.get('text', '') or msg.get('message', '')
+        ts = parse_timestamp(msg)
         for match in PROXY_PATTERN.finditer(text):
-            found.add(match.group(0))
-    return sorted(found)
+            url = match.group(0)
+            # Keep the most recent timestamp for this URL
+            if url not in found or (ts and found[url] == ''):
+                found[url] = ts
+    # Sort by timestamp DESC (newest first), then URL alphabetically
+    return sorted(found.items(), key=lambda x: (x[1] or '', x[0]), reverse=True)
 
 
 def get_existing_proxies() -> list:
-    """Load existing proxies from file, newest-first by line order."""
+    """
+    Load existing proxies from file.
+    Returns list of (url, timestamp) tuples, oldest-first for stable re-insertion.
+    Lines without timestamp treated as oldest (empty timestamp = earliest).
+    """
     if not os.path.exists(PROXIES_FILE):
         return []
+    result = []
     with open(PROXIES_FILE) as f:
-        return [line.strip() for line in f if line.strip()]
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if '|' in line:
+                url, ts = line.rsplit('|', 1)
+                result.append((url.strip(), ts.strip()))
+            else:
+                # Legacy format: URL only, treat as oldest
+                result.append((line, ''))
+    # Sort oldest first so they're re-inserted after new proxies
+    result.sort(key=lambda x: (x[1] or '', x[0]))
+    return result
 
 
 def write_proxies_atomic(proxies: list):
-    """Write proxies to temp file then rename (atomic)."""
+    """
+    Write proxies to temp file then rename (atomic).
+    Format: URL|YYYY-MM-DDTHH:MM:SS
+    """
     dir_name = os.path.dirname(PROXIES_FILE)
     fd, tmp_path = tempfile.mkstemp(dir=dir_name, prefix='.proxies_', suffix='.tmp')
+    lines = []
+    for url, ts in proxies:
+        if ts:
+            lines.append(f'{url}|{ts}')
+        else:
+            lines.append(url)
     try:
         with os.fdopen(fd, 'w') as f:
-            f.write('\n'.join(proxies) + '\n')
+            f.write('\n'.join(lines) + '\n')
         os.replace(tmp_path, PROXIES_FILE)
     except Exception:
         if os.path.exists(tmp_path):
@@ -184,20 +247,20 @@ def main():
     print(f'Found {len(new_proxies)} unique proxy(s) in messages')
 
     existing = get_existing_proxies()
-    seen = set()
+    seen = {}
     combined = []
 
-    # New proxies first (most recent)
-    for p in new_proxies:
-        if p not in seen:
-            seen.add(p)
-            combined.append(p)
+    # New proxies first (most recent, already sorted DESC)
+    for url, ts in new_proxies:
+        if url not in seen:
+            seen[url] = True
+            combined.append((url, ts))
 
     # Then existing proxies in file order (skip duplicates)
-    for p in existing:
-        if p not in seen:
-            seen.add(p)
-            combined.append(p)
+    for url, ts in existing:
+        if url not in seen:
+            seen[url] = True
+            combined.append((url, ts))
 
     # Keep at most MAX_PROXIES
     combined = combined[:MAX_PROXIES]
@@ -205,7 +268,7 @@ def main():
     new_count = len(combined) - len(existing)
     print(f'Adding {max(0, new_count)} new proxy(s) (total: {len(combined)})')
 
-    if new_count <= 0:
+    if new_count <= 0 and existing == combined:
         print('No new proxies to add.')
         sys.exit(0)
 
