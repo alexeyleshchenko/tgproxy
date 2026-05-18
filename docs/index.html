@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Proxy List — tgproxy.l1979.ru</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
+    <meta name="description" content="Auto-updated list of Telegram proxy servers from @telemtrs Free proxy topic">
+    <meta name="author" content="leshchenko1979">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%234fc3f7'/><circle cx='50' cy='50' r='20' fill='%231a1a2e'/><circle cx='50' cy='50' r='8' fill='%234fc3f7'/></svg>">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -50,6 +52,9 @@
             color: #81d4fa;
             word-break: break-all;
         }
+        .proxy-url:hover {
+            color: #4fc3f7;
+        }
         .copy-btn {
             background: #4fc3f7;
             color: #1a1a2e;
@@ -64,6 +69,10 @@
         }
         .copy-btn:hover {
             background: #29b6f6;
+        }
+        .copy-btn:focus-visible {
+            outline: 2px solid #81d4fa;
+            outline-offset: 2px;
         }
         .copy-btn.copied {
             background: #66bb6a;
@@ -97,9 +106,9 @@
             const countEl = document.getElementById('count');
 
             try {
-                const response = await fetch('https://raw.githubusercontent.com/leshchenko1979/tgproxy/main/proxies.txt');
+                const response = await fetch('./proxies.txt');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch');
+                    throw new Error('Failed to fetch: ' + response.status);
                 }
                 const text = await response.text();
                 const lines = text.trim().split('\n').filter(l => l.trim());
@@ -111,25 +120,46 @@
                     return;
                 }
 
-                container.innerHTML = lines.map(url => {
-                    const safeUrl = url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return '<div class="proxy-item">' +
-                        '<a class="proxy-url" href="' + safeUrl + '" target="_blank">' + url + '</a>' +
-                        '<button class="copy-btn" onclick="copyToClipboard(\'' + safeUrl + '\', this)">Copy</button>' +
-                        '</div>';
-                }).join('');
+                container.innerHTML = '';
+                for (const url of lines) {
+                    const item = document.createElement('div');
+                    item.className = 'proxy-item';
+
+                    const link = document.createElement('a');
+                    link.className = 'proxy-url';
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = url;
+
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.setAttribute('aria-label', 'Copy proxy URL');
+                    btn.dataset.url = url;
+                    btn.textContent = 'Copy';
+
+                    item.appendChild(link);
+                    item.appendChild(btn);
+                    container.appendChild(item);
+                }
             } catch (err) {
                 countEl.textContent = '';
                 container.innerHTML = '<div class="state">Failed to load proxies. Refresh to retry.</div>';
             }
         }
 
-        function copyToClipboard(text, btn) {
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.copy-btn');
+            if (!btn) return;
+
+            const url = btn.dataset.url;
+            if (!url) return;
+
             if (!navigator.clipboard) {
                 btn.textContent = 'No API';
                 return;
             }
-            navigator.clipboard.writeText(text).then(() => {
+            navigator.clipboard.writeText(url).then(() => {
                 btn.textContent = 'Copied!';
                 btn.classList.add('copied');
                 setTimeout(() => {
@@ -142,7 +172,7 @@
                     btn.textContent = 'Copy';
                 }, 1500);
             });
-        }
+        });
 
         loadProxies();
     </script>

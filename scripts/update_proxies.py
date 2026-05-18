@@ -1,76 +1,98 @@
 #!/usr/bin/env python3
 """
-Update Telegram proxy list from @telemtrs Free Proxy topic.
+Update Telegram proxy list from @telemtrs Free proxy topic.
 Reads TG_MCP_TOKEN from environment variable.
 """
 
-import re
 import json
 import os
+import re
 import subprocess
 import sys
-import urllib.request
-import urllib.error
+import tempfile
+from datetime import date
 
-REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROXIES_FILE = os.path.join(REPO_DIR, "docs", "proxies.txt")
+# === CONFIG ===
+REPO_DIR = os.path.dirname(os.path.abspath(__file__))
+PROXIES_FILE = os.path.join(REPO_DIR, 'proxies.txt')
+MCP_URL = os.environ.get('MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
+MCP_TOKEN = os.environ.get('TG_MCP_TOKEN')
+TELEGRAM_CHAT = 'telemtrs'
+TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
-MCP_SERVER = "https://tg-mcp.l1979.ru/v1/mcp"
-MCP_TOKEN = os.environ.get("TG_MCP_TOKEN", "")
-MAX_RETRIES = 3
-
-PROXY_PATTERN = re.compile(r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+')
+PROXY_PATTERN = re.compile(
+    r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
+)
 
 
-def mcp_call(tool: str, params: dict) -> list[dict]:
-    """Call MCP server via HTTP."""
+def die(msg):
+    """Print error and exit with code 1."""
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
+
+def check_token():
+    """Fail fast if token is missing."""
+    if not MCP_TOKEN:
+        die('TG_MCP_TOKEN environment variable not set')
+
+
+def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
+    """Call MCP server via HTTP and return parsed result list."""
+    import urllib.request
+
     payload = {
-        "jsonrpc": "2.0",
-        "method": "tools/call",
-        "params": {"name": tool, "arguments": params},
-        "id": 1
+        'jsonrpc': '2.0',
+        'id': 1,
+        'method': 'tools/call',
+        'params': {'name': tool, 'arguments': params}
     }
-    
-    for attempt in range(MAX_RETRIES):
+
+    req = urllib.request.Request(
+        MCP_URL,
+        data=json.dumps(payload).encode(),
+        headers={
+            'Authorization': f'Bearer {MCP_TOKEN}',
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+        },
+        method='POST'
+    )
+
+    for attempt in range(3):
         try:
-            req = urllib.request.Request(
-                MCP_SERVER,
-                data=json.dumps(payload).encode(),
-                headers={
-                    "Authorization": f"Bearer {MCP_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json, text/event-stream"
-                },
-                method="POST"
-            )
-            
-            with urllib.request.urlopen(req, timeout=30) as response:
-                result_text = response.read().decode()
-            
-            proxies = []
-            for line in result_text.split('\n'):
-                if line.startswith('data: '):
-                    try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                result_text = ''
+                for line in resp:
+                    line = line.decode().strip()
+                    if line.startswith('data: '):
                         data = json.loads(line[6:])
-                        if 'result' in data and 'content' in data['result']:
-                            content = data['result']['content']
-                            if isinstance(content, list) and len(content) > 0:
-                                text = content[0].get('text', '')
-                                msg_data = json.loads(text)
-                                if 'messages' in msg_data:
-                                    proxies.extend(msg_data['messages'])
-                    except (json.JSONDecodeError, KeyError, IndexError):
-                        continue
-            return proxies
-        except Exception as e:
-            if attempt < MAX_RETRIES - 1:
+                        if 'result' in data and isinstance(data['result'], dict):
+                            content = data['result'].get('content', [])
+                            for item in content:
+                                if item.get('type') == 'text':
+                                    inner = json.loads(item['text'])
+                                    if 'messages' in inner:
+                                        return inner['messages']
+                return []
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                die(f'Auth failed ({e.code}). Check TG_MCP_TOKEN.')
+            if attempt < 2:
+                print(f'HTTP error {e.code}, retrying...', file=sys.stderr)
                 continue
-            return []
+            raise
+        except Exception as e:
+            if attempt < 2:
+                print(f'Error: {e}, retrying...', file=sys.stderr)
+                continue
+            raise
+
     return []
 
 
-def extract_proxies(messages: list[dict]) -> list[str]:
-    """Extract proxy URLs from messages."""
+def extract_proxies(messages: list) -> list:
+    """Extract unique proxy URLs from messages, sorted for determinism."""
     found = set()
     for msg in messages:
         text = msg.get('text', '') or msg.get('message', '')
@@ -79,83 +101,120 @@ def extract_proxies(messages: list[dict]) -> list[str]:
     return sorted(found)
 
 
-def get_existing_proxies() -> list[str]:
-    """Load existing proxies from file."""
+def get_existing_proxies() -> list:
+    """Load existing proxies from file, newest-first by line order."""
     if not os.path.exists(PROXIES_FILE):
         return []
     with open(PROXIES_FILE) as f:
         return [line.strip() for line in f if line.strip()]
 
 
-def git_push() -> bool:
-    """Commit and push changes if there are any."""
+def write_proxies_atomic(proxies: list):
+    """Write proxies to temp file then rename (atomic)."""
+    dir_name = os.path.dirname(PROXIES_FILE)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, prefix='.proxies_', suffix='.tmp')
     try:
-        subprocess.run(["git", "add", "docs/proxies.txt"], check=True, capture_output=True)
-        result = subprocess.run(
-            ["git", "commit", "-m", f"Update proxies {__import__('datetime').date.today()}"],
-            capture_output=True, text=True
+        with os.fdopen(fd, 'w') as f:
+            f.write('\n'.join(proxies) + '\n')
+        os.replace(tmp_path, PROXIES_FILE)
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+
+def git_add_commit_push() -> bool:
+    """Git add, commit, push. Returns True on success, False on failure."""
+    try:
+        sub = lambda cmd: subprocess.run(
+            cmd,
+            cwd=REPO_DIR,
+            capture_output=True,
+            text=True,
+            timeout=60
         )
-        if result.returncode == 0:
-            subprocess.run(["git", "push"], check=True, capture_output=True)
+
+        r = sub(['git', 'add', 'proxies.txt'])
+        if r.returncode != 0:
+            print(f'git add failed: {r.stderr}', file=sys.stderr)
+            return False
+
+        r = sub(['git', 'diff', '--staged', '--quiet'])
+        if r.returncode == 1:
+            # There are staged changes
+            r = sub(['git', 'commit', '-m', f'update: add proxies {date.today()}'])
+            if r.returncode != 0:
+                print(f'git commit failed: {r.stderr}', file=sys.stderr)
+                return False
+
+            r = sub(['git', 'push'])
+            if r.returncode != 0:
+                print(f'git push failed: {r.stderr}', file=sys.stderr)
+                return False
             return True
+        return False  # No changes
+    except subprocess.TimeoutExpired:
+        print('Git command timed out', file=sys.stderr)
         return False
-    except subprocess.CalledProcessError:
+    except Exception as e:
+        print(f'Git error: {e}', file=sys.stderr)
         return False
 
 
 def main():
-    if not MCP_TOKEN:
-        print("ERROR: TG_MCP_TOKEN environment variable not set")
-        sys.exit(1)
-    
-    print("Fetching proxies from Telegram topic...")
-    messages = mcp_call("get_messages", {
-        "chat_id": "telemtrs",
-        "reply_to_id": 16160,
-        "query": "t.me",
-        "limit": 50
+    check_token()
+
+    print('Fetching proxies from Telegram topic...')
+    messages = mcp_call('get_messages', {
+        'chat_id': TELEGRAM_CHAT,
+        'reply_to_id': TOPIC_ID,
+        'query': 't.me',
+        'limit': 100
     })
-    
+
     if not messages:
-        print("No messages fetched")
-        sys.exit(1)
-    
+        print('No messages fetched from topic.')
+        sys.exit(0)
+
     new_proxies = extract_proxies(messages)
-    print(f"Found {len(new_proxies)} unique proxies in messages")
-    
+    print(f'Found {len(new_proxies)} unique proxy(s) in messages')
+
     existing = get_existing_proxies()
-    print(f"Existing proxies: {len(existing)}")
-    
-    # Deduplicate preserving order: new first, then existing
     seen = set()
     combined = []
+
+    # New proxies first (most recent)
     for p in new_proxies:
         if p not in seen:
             seen.add(p)
             combined.append(p)
+
+    # Then existing proxies in file order (skip duplicates)
     for p in existing:
         if p not in seen:
             seen.add(p)
             combined.append(p)
-    
-    all_proxies = combined[:MAX_PROXIES]
-    
-    new_count = len(all_proxies) - len(existing)
+
+    # Keep at most MAX_PROXIES
+    combined = combined[:MAX_PROXIES]
+
+    new_count = len(combined) - len(existing)
+    print(f'Adding {max(0, new_count)} new proxy(s) (total: {len(combined)})')
+
     if new_count <= 0:
-        print(f"No new proxies to add (total: {len(all_proxies)})")
+        print('No new proxies to add.')
         sys.exit(0)
-    
-    print(f"Adding {new_count} new proxies (total: {len(all_proxies)})")
-    
-    with open(PROXIES_FILE, 'w') as f:
-        for p in all_proxies:
-            f.write(p + '\n')
-    
-    if git_push():
-        print("Done!")
-    else:
-        print("Git push failed or no changes to commit")
+
+    write_proxies_atomic(combined)
+
+    pushed = git_add_commit_push()
+    if not pushed:
+        print('WARNING: proxies.txt updated locally but git push failed.', file=sys.stderr)
+        sys.exit(1)
+
+    print('Done!')
+    sys.exit(0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
