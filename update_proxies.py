@@ -245,10 +245,14 @@ def main():
 
     combined = combined[:MAX_PROXIES]
 
+    # Sort for comparison (combined is [newest first], existing is [oldest first])
+    combined_sorted = sorted(combined, key=lambda x: x[0])
+    existing_sorted = sorted(existing, key=lambda x: x[0])
+
     new_count = len(combined) - len(existing)
     logger.info(f'Adding {max(0, new_count)} new proxy(s) (total: {len(combined)})')
 
-    if new_count <= 0 and existing == combined:
+    if new_count <= 0 and combined_sorted == existing_sorted:
         logger.info('No new proxies to add.')
         sys.exit(0)
 
