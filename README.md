@@ -6,7 +6,7 @@ Proxy URLs are collected from the [@telemtrs](https://t.me/telemtrs) channel's "
 
 ## How It Works
 
-1. **Collection** — Fetch messages from `@telemtrs`, topic "Free proxy" (topic_id: 16160) via MCP
+1. **Collection** — Fetch messages from `@telemtrs`, topic "Free proxy" (topic_id: 16160) via `tg-mcp-call` → fastmcp → [tg-mcp.l1979.ru](https://tg-mcp.l1979.ru)
 2. **Processing** — Extract proxy URLs (`tg://proxy?...`, `https://t.me/proxy?...`, socks, killer)
 3. **Merge** — Deduplicate, prefer new URLs from Telegram, keep up to 30 newest entries
 4. **Publishing** — Commit and push to GitHub; GitHub Pages serves at tgproxy.l1979.ru
@@ -36,11 +36,13 @@ Both `tg://proxy?...` and `https://t.me/proxy?...` forms are stored as found in 
 
 ## Configuration
 
-| Constant | Default | Purpose |
-|----------|---------|---------|
-| `MCP_BIN` | `/root/.local/bin/mcp` | MCP CLI binary on the server |
+| Constant / env | Default | Purpose |
+|----------------|---------|---------|
+| `TG_MCP_CALL` | `/usr/local/bin/tg-mcp-call` | Hermes wrapper (fastmcp + bearer); deploy from [vds-servers](https://github.com/leshchenko1979/servers) `5 - hermes/scripts/deploy-opencrabs-tg-tools.sh` |
 | `MAX_PROXIES` | `30` | Maximum entries in the list |
 | `TOPIC_ID` | `16160` | Forum topic ID in @telemtrs |
+
+On Hermes: `fastmcp-slim[client]`, `/etc/tg-mcp/mcp.json`, bearer in `/root/.opencrabs/config.toml` `[mcp]`.
 
 ## Local Setup
 

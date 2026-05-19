@@ -19,7 +19,7 @@ PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
-MCP_BIN = '/root/.local/bin/mcp'
+TG_MCP_CALL = os.environ.get('TG_MCP_CALL', '/usr/local/bin/tg-mcp-call')
 PROXY_PATTERN = re.compile(
     r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
     r'|tg://proxy\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
@@ -74,7 +74,7 @@ def mcp_call(tool: str, params: dict, timeout: int = 120) -> list | None:
     Returns message list on success (may be empty), or None on failure.
     """
     args_json = json.dumps(params)
-    cmd = [MCP_BIN, 'tg-mcp', tool, args_json]
+    cmd = [TG_MCP_CALL, tool, args_json]
 
     try:
         proc = subprocess.run(
@@ -84,7 +84,11 @@ def mcp_call(tool: str, params: dict, timeout: int = 120) -> list | None:
             timeout=timeout,
         )
         if proc.returncode != 0:
-            logger.error(f'MCP failed (exit {proc.returncode}): {proc.stderr}')
+            logger.error(
+                'tg-mcp-call failed (exit %s): %s',
+                proc.returncode,
+                proc.stderr or proc.stdout,
+            )
             return None
 
         output = proc.stdout.strip()
@@ -98,9 +102,10 @@ def mcp_call(tool: str, params: dict, timeout: int = 120) -> list | None:
         if start == -1:
             logger.error('MCP output contained no JSON object')
             return None
-        json_str = output[start:]
+        result = json.loads(output[start:])
 
-        result = json.loads(json_str)
+        if isinstance(result.get('messages'), list):
+            return result['messages']
 
         messages = []
         for item in result.get('content', []):
