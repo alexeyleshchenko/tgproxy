@@ -27,17 +27,16 @@ PROXY_PATTERN = re.compile(
 # ISO format for timestamps
 TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
-LOG_FILE = os.path.join(REPO_DIR, 'update_proxies.log')
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+root_logger.handlers.clear()
+root_logger.addHandler(logging.StreamHandler(sys.stdout))
+try:
+    root_logger.addHandler(logging.handlers.SysLogHandler(address='/dev/log',
+                                                           facility=logging.handlers.SysLogHandler.LOG_CRON))
+except Exception:
+    pass
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
-    datefmt='%Y-%m-%dT%H:%M:%SZ',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(LOG_FILE, mode='a')
-    ]
-)
 logger = logging.getLogger(__name__)
 
 
