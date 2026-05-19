@@ -17,17 +17,6 @@ from datetime import date, datetime, timezone
 # === CONFIG ===
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
-MCP_URL = os.environ.get('MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
-MCP_TOKEN = os.environ.get('TG_MCP_TOKEN')
-if not MCP_TOKEN:
-    # Fallback: read from servers.json
-    servers_file = os.path.expanduser('~/vds-servers/servers.json')
-    if os.path.exists(servers_file):
-        with open(servers_file) as f:
-            servers = json.load(f)
-        MCP_TOKEN = servers.get('telegram', {}).get('bot', {}).get('tg_mcp_token')
-        if MCP_TOKEN:
-            logger.info('Loaded TG_MCP_TOKEN from ~/vds-servers/servers.json')
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
@@ -51,11 +40,6 @@ def die(msg):
     """Print error and exit with code 1."""
     logger.error(msg)
     sys.exit(1)
-
-
-def check_token():
-    """Token is now read from servers.json inside mcp_call()."""
-    pass
 
 
 def mcp_call(tool: str, params: dict, timeout: int = 120) -> list:
@@ -230,13 +214,12 @@ def git_add_commit_push() -> bool:
 
 
 def main():
-    check_token()
-
     logger.info('Fetching proxies from Telegram...')
     messages = mcp_call('get_messages', {
         'chat_id': TELEGRAM_CHAT,
         'query': 'proxy',
-        'limit': 200
+        'limit': 200,
+        'reply_to_id': TOPIC_ID
     })
 
     if not messages:
