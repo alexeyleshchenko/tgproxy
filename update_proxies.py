@@ -31,11 +31,32 @@ root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 root_logger.handlers.clear()
 root_logger.addHandler(logging.StreamHandler(sys.stdout))
+
+# File-based logging
+LOG_DIR = '/var/log/tgproxy'
+LOG_FILE = os.path.join(LOG_DIR, 'update.log')
 try:
-    root_logger.addHandler(logging.handlers.SysLogHandler(address='/dev/log',
-                                                           facility=logging.handlers.SysLogHandler.LOG_CRON))
-except Exception:
-    pass
+    os.makedirs(LOG_DIR, exist_ok=True)
+    file_handler = logging.FileHandler(LOG_FILE)
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    root_logger.addHandler(file_handler)
+except Exception as e:
+    # Fallback: log to ~/tgproxy/update.log
+    LOG_FILE = os.path.expanduser('~/tgproxy/update.log')
+    try:
+        file_handler = logging.FileHandler(LOG_FILE)
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        ))
+        root_logger.addHandler(file_handler)
+    except Exception:
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +178,34 @@ def get_existing_proxies() -> list:
     return result
 
 
+def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES) -> list:
+    """
+    Merge new and existing proxies, keeping at most max_size total.
+    
+    New proxies are preferred over existing ones.
+    Within each group, order is preserved (newest-first for new, oldest-first for existing).
+    
+    Returns combined list of (url, timestamp) tuples, truncated to max_size.
+    """
+    seen = {}
+    combined = []
+
+    # Add new proxies first (they take priority)
+    for url, ts in new_proxies:
+        if url not in seen:
+            seen[url] = True
+            combined.append((url, ts))
+
+    # Then add existing proxies that aren't in new
+    for url, ts in existing:
+        if url not in seen:
+            seen[url] = True
+            combined.append((url, ts))
+
+    # Truncate to max_size
+    return combined[:max_size]
+
+
 def write_proxies_atomic(proxies: list):
     """
     Write proxies to temp file then rename (atomic).
@@ -234,20 +283,7 @@ def main():
     logger.info(f'Found {len(new_proxies)} unique proxy(s) in messages')
 
     existing = get_existing_proxies()
-    seen = {}
-    combined = []
-
-    for url, ts in new_proxies:
-        if url not in seen:
-            seen[url] = True
-            combined.append((url, ts))
-
-    for url, ts in existing:
-        if url not in seen:
-            seen[url] = True
-            combined.append((url, ts))
-
-    combined = combined[:MAX_PROXIES]
+    combined = merge_proxies(new_proxies, existing)
 
     # Sort for comparison (combined is [newest first], existing is [oldest first])
     combined_sorted = sorted(combined, key=lambda x: x[0])

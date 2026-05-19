@@ -101,3 +101,39 @@ class TestProxyPatternEdgeCases:
     def test_server_with_underscore(self):
         url = "tg://proxy?server=my_server.example.com&port=443&secret=abc"
         assert PROXY_PATTERN.search(url) is not None
+
+
+def make_proxy(url, days_ago):
+    """Helper: create a proxy tuple with timestamp N days ago."""
+    from datetime import datetime, timedelta, timezone
+    ts = datetime.now(timezone.utc) - timedelta(days=days_ago)
+    return (url, ts.strftime(TS_FORMAT))
+
+
+def make_proxies(url_template, count, start_day, step=1):
+    """Helper: create N proxies with urls like url_template.format(i)."""
+    return [make_proxy(url_template.format(i), start_day + i * step) for i in range(count)]
+
+
+class TestProxyMerge:
+    """Tests for proxy list merging logic."""
+
+    def test_25_existing_10_new_preserves_all_new(self):
+        """
+        25 existing + 10 new = 35 total. MAX=30.
+        All 10 new proxies must be preserved, result should be exactly 30.
+        """
+        from update_proxies import merge_proxies
+
+        new_proxies = make_proxies("tg://new{}|secret", 10, start_day=0)
+        existing = make_proxies("tg://existing{}|secret", 25, start_day=10)
+
+        merged = merge_proxies(new_proxies, existing)
+
+        # Should have exactly 30 proxies
+        assert len(merged) == 30
+
+        # All 10 new proxies must be preserved
+        all_urls = [p[0] for p in merged]
+        for i in range(10):
+            assert any(f"new{i}" in url for url in all_urls)
