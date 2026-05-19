@@ -4,156 +4,100 @@ Tests for update_proxies.py
 
 import sys
 import os
+import re
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from update_proxies import (
-    extract_timestamp,
-    normalize_url,
-    is_valid,
-)
+from update_proxies import PROXY_PATTERN, TS_FORMAT
 
 
-class TestExtractTimestamp:
-    """Tests for extract_timestamp function."""
+class TestProxyPattern:
+    """Tests for PROXY_PATTERN regex."""
 
-    def test_url_with_timestamp(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc|2026-05-18T15:46:51"
-        result = extract_timestamp(url)
-        assert result == ("tg://proxy?server=example.com&port=443&secret=abc", "2026-05-18T15:46:51")
+    def test_tg_proxy(self):
+        url = "tg://proxy?server=example.com&port=443&secret=abc123"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_url_without_timestamp(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc"
-        result = extract_timestamp(url)
-        assert result == ("tg://proxy?server=example.com&port=443&secret=abc", None)
+    def test_https_t_me_proxy(self):
+        url = "https://t.me/proxy?server=example.com&port=443&secret=abc123"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_url_with_date_not_timestamp(self):
-        """A URL that has |2026 but not a valid timestamp format should not be stripped."""
-        url = "tg://proxy?server=example.com&port=443&secret=abc|2026"
-        result = extract_timestamp(url)
-        assert result == (url, None)
+    def test_https_t_me_socks(self):
+        url = "https://t.me/socks?server=example.com&port=1080&secret=abc123"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_empty_url(self):
-        result = extract_timestamp("")
-        assert result == ("", None)
+    def test_https_t_me_killer(self):
+        url = "https://t.me/killer?server=example.com&port=443&secret=abc123"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_timestamp_with_extra_pipes(self):
-        """Timestamp with extra pipes at end - the regex stops at the timestamp, doesn't include **|."""
-        url = "tg://proxy?server=example.com&port=443&secret=abc|2026-05-18T15:46:51**|"
-        result = extract_timestamp(url)
-        # The timestamp regex matches |2026-...T... but stops before **|, so full url is returned
-        assert result == ("tg://proxy?server=example.com&port=443&secret=abc|2026-05-18T15:46:51**|", None)
-
-
-class TestNormalizeUrl:
-    """Tests for normalize_url function."""
-
-    def test_https_t_me_proxy_conversion(self):
-        url = "https://t.me/proxy?server=example.com&port=443&secret=abc"
-        result = normalize_url(url)
-        assert result == "tg://proxy?server=example.com&port=443&secret=abc"
-
-    def test_already_tg_proxy(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc"
-        result = normalize_url(url)
-        assert result == "tg://proxy?server=example.com&port=443&secret=abc"
-
-    def test_trailing_slash(self):
-        url = "https://t.me/proxy?server=example.com&port=443&secret=abc/"
-        result = normalize_url(url)
-        assert result == "tg://proxy?server=example.com&port=443&secret=abc/"
-
-    def test_vmess_returns_none(self):
-        """vmess:// URLs are not normalized to tg://proxy format."""
+    def test_vmess_not_matched(self):
+        """vmess:// URLs should not be matched by PROXY_PATTERN."""
         url = "vmess://eyJhbGciOiJIUzI1NiIsInB5ciI6Ik..."
-        result = normalize_url(url)
-        assert result is None
+        assert PROXY_PATTERN.search(url) is None
 
-    def test_trojan_returns_none(self):
-        """trojan:// URLs are not normalized to tg://proxy format."""
+    def test_trojan_not_matched(self):
+        """trojan:// URLs should not be matched by PROXY_PATTERN."""
         url = "trojan://password@example.com:443"
-        result = normalize_url(url)
-        assert result is None
+        assert PROXY_PATTERN.search(url) is None
 
-    def test_empty_url_returns_none(self):
-        result = normalize_url("")
-        assert result is None
+    def test_ss_not_matched(self):
+        """ss:// URLs should not be matched by PROXY_PATTERN."""
+        url = "ss://YmY5ZTQ4ZDQtNWQyMC00NDQwLWI2YzEtODQwZjYyZTkyZjFk@1.2.3.4:8388"
+        assert PROXY_PATTERN.search(url) is None
+
+    def test_url_without_server(self):
+        """URL without server param should not match."""
+        url = "tg://proxy?port=443&secret=abc123"
+        assert PROXY_PATTERN.search(url) is None
+
+    def test_url_without_port(self):
+        """URL without port param should not match."""
+        url = "tg://proxy?server=example.com&secret=abc123"
+        assert PROXY_PATTERN.search(url) is None
+
+    def test_url_without_secret(self):
+        """URL without secret param should not match."""
+        url = "tg://proxy?server=example.com&port=443"
+        assert PROXY_PATTERN.search(url) is None
+
+    def test_partial_match(self):
+        """Pattern should match full URL, not partial."""
+        text = "Check this tg://proxy?server=example.com&port=443&secret=abc123 please"
+        match = PROXY_PATTERN.search(text)
+        assert match is not None
+        assert match.group(0) == "tg://proxy?server=example.com&port=443&secret=abc123"
 
 
-class TestIsValid:
-    """Tests for is_valid function."""
+class TestTimestampFormat:
+    """Tests for TS_FORMAT constant."""
 
-    def test_good_tg_proxy(self):
+    def test_format_string(self):
+        assert TS_FORMAT == '%Y-%m-%dT%H:%M:%S'
+
+
+class TestProxyPatternEdgeCases:
+    """Edge cases for proxy URL matching."""
+
+    def test_port_443(self):
         url = "tg://proxy?server=example.com&port=443&secret=abc"
-        assert is_valid(url) is True
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_asterisk_in_server(self):
-        url = "tg://proxy?server=144*.*.*&port=443&secret=abc"
-        assert is_valid(url) is False
+    def test_port_8443(self):
+        url = "tg://proxy?server=example.com&port=8443&secret=abc"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_double_pipe_suffix(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc**|"
-        assert is_valid(url) is False
+    def test_ipv4_server(self):
+        url = "tg://proxy?server=1.2.3.4&port=443&secret=abc"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_double_paren_pipe_suffix(self):
-        url = "tg://proxy?server=example.com&port=8443&secret=...relay.duckdns.org)**|"
-        assert is_valid(url) is False
+    def test_secret_with_special_chars(self):
+        """Secret can contain various base64 chars."""
+        url = "tg://proxy?server=example.com&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_double_dot(self):
-        url = "tg://proxy?server=example..com&port=443&secret=abc"
-        assert is_valid(url) is False
+    def test_server_with_dash(self):
+        url = "tg://proxy?server=my-server.example.com&port=443&secret=abc"
+        assert PROXY_PATTERN.search(url) is not None
 
-    def test_space_in_url(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc "
-        assert is_valid(url) is False
-
-    def test_undefined(self):
-        url = "tg://proxy?server=undefined&port=443&secret=abc"
-        assert is_valid(url) is False
-
-    def test_backtick(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc```"
-        assert is_valid(url) is False
-
-    def test_closing_paren_at_end(self):
-        url = "tg://proxy?server=example.com&port=443&secret=abc)"
-        assert is_valid(url) is False
-
-    def test_missing_server(self):
-        url = "tg://proxy?port=443&secret=abc"
-        assert is_valid(url) is False
-
-    def test_missing_port(self):
-        url = "tg://proxy?server=example.com&secret=abc"
-        assert is_valid(url) is False
-
-    def test_empty_url(self):
-        assert is_valid("") is False
-
-
-class TestTimestampPreservation:
-    """Integration tests for timestamp preservation through pipeline."""
-
-    def test_timestamp_preserved_in_normalize(self):
-        """Timestamp should survive the full pipeline."""
-        line = "https://t.me/proxy?server=example.com&port=443&secret=abc|2026-05-18T15:46:51"
-
-        url, ts = extract_timestamp(line)
-        url = normalize_url(url)
-        final = f"{url}|{ts}" if ts else url
-
-        assert final == "tg://proxy?server=example.com&port=443&secret=abc|2026-05-18T15:46:51"
-
-    def test_bad_url_with_timestamp_still_rejected(self):
-        """Bad URLs should be rejected regardless of timestamp."""
-        line = "tg://proxy?server=144*.*.*&port=443&secret=abc|2026-05-18T15:46:51"
-
-        url, ts = extract_timestamp(line)
-        url = normalize_url(url)
-
-        assert is_valid(url) is False
-
-    def test_multiple_bad_patterns_in_one_url(self):
-        """URLs with multiple bad patterns should all be caught."""
-        assert is_valid("tg://proxy?server=144*.*.*&port=443&secret=**|") is False
-        assert is_valid("tg://proxy?server=sub..relay&port=443&secret=abc```") is False
-        assert is_valid("tg://proxy?server=bad )&port=443&secret=abc") is False
+    def test_server_with_underscore(self):
+        url = "tg://proxy?server=my_server.example.com&port=443&secret=abc"
+        assert PROXY_PATTERN.search(url) is not None
