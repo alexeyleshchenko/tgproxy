@@ -15,10 +15,19 @@ import tempfile
 from datetime import date, datetime, timezone
 
 # === CONFIG ===
-REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
 MCP_URL = os.environ.get('MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
 MCP_TOKEN = os.environ.get('TG_MCP_TOKEN')
+if not MCP_TOKEN:
+    # Fallback: read from servers.json
+    servers_file = os.path.expanduser('~/vds-servers/servers.json')
+    if os.path.exists(servers_file):
+        with open(servers_file) as f:
+            servers = json.load(f)
+        MCP_TOKEN = servers.get('telegram', {}).get('bot', {}).get('tg_mcp_token')
+        if MCP_TOKEN:
+            logger.info('Loaded TG_MCP_TOKEN from ~/vds-servers/servers.json')
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
@@ -45,67 +54,57 @@ def die(msg):
 
 
 def check_token():
-    """Fail fast if token is missing."""
-    if not MCP_TOKEN:
-        logger.error('TG_MCP_TOKEN environment variable not set')
-        sys.exit(1)
+    """Token is now read from servers.json inside mcp_call()."""
+    pass
 
 
-def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
-    """Call MCP server via HTTP and return parsed result list."""
-    import urllib.request
+def mcp_call(tool: str, params: dict, timeout: int = 120) -> list:
+    """Call MCP server via shell command (from tools.toml)."""
+    import re
+    args_json = json.dumps(params)
+    cmd = ['/root/.local/bin/mcp', 'tg-mcp', tool, args_json]
 
-    payload = {
-        'jsonrpc': '2.0',
-        'id': 1,
-        'method': 'tools/call',
-        'params': {'name': tool, 'arguments': params}
-    }
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
+        if proc.returncode != 0:
+            logger.error(f'MCP failed: {proc.stderr}')
+            return []
 
-    req = urllib.request.Request(
-        MCP_URL,
-        data=json.dumps(payload).encode(),
-        headers={
-            'Authorization': f'Bearer {MCP_TOKEN}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json, text/event-stream'
-        },
-        method='POST'
-    )
+        output = proc.stdout.strip()
+        if not output:
+            return []
 
-    for attempt in range(3):
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                result_text = ''
-                for line in resp:
-                    line = line.decode().strip()
-                    if line.startswith('data: '):
-                        data = json.loads(line[6:])
-                        if 'result' in data and isinstance(data['result'], dict):
-                            content = data['result'].get('content', [])
-                            for item in content:
-                                if item.get('type') == 'text':
-                                    inner = None
-                                    try:
-                                        inner = json.loads(item['text'])
-                                    except (json.JSONDecodeError, TypeError, KeyError):
-                                        continue
-                                    if inner and 'messages' in inner:
-                                        return inner['messages']
-                return []
-        except urllib.error.HTTPError as e:
-            if e.code in (401, 403):
-                die(f'Auth failed ({e.code}). Check TG_MCP_TOKEN.')
-            if attempt < 2:
-                logger.warning(f'HTTP error {e.code}, retrying...')
-                continue
-            raise
-        except Exception as e:
-            if attempt < 2:
-                logger.warning(f'Error: {e}, retrying...')
-                continue
-            raise
+        # Strip ANSI escape codes
+        ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+        output = ansi_escape.sub('', output)
 
+        # Find JSON object in output
+        start = output.find('{')
+        if start == -1:
+            return []
+        json_str = output[start:]
+
+        # Parse outer JSON
+        result = json.loads(json_str)
+
+        # Extract messages from content[].text
+        messages = []
+        for item in result.get('content', []):
+            if item.get('type') == 'text':
+                text = item.get('text', '')
+                if text:
+                    inner = json.loads(text)
+                    messages.extend(inner.get('messages', []))
+        return messages
+    except subprocess.TimeoutExpired:
+        die('MCP call timed out')
+    except Exception as e:
+        die(f'MCP call failed: {e}')
     return []
 
 
@@ -204,7 +203,7 @@ def git_add_commit_push() -> bool:
             timeout=60
         )
 
-        r = sub(['git', 'add', 'proxies.txt'])
+        r = sub(['git', 'add', 'docs/proxies.txt'])
         if r.returncode != 0:
             logger.error(f'git add failed: {r.stderr}')
             return False
