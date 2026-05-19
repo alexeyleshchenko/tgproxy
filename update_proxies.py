@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
 Update Telegram proxy list from @telemtrs Free proxy topic.
-Reads TG_MCP_TOKEN from environment variable.
+Reads TG_MCP_TOKEN from environment variable or servers.json.
 Stores proxies with timestamps: URL|YYYY-MM-DDTHH:MM:SS
 """
 
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import tempfile
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 # === CONFIG ===
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,17 +29,26 @@ PROXY_PATTERN = re.compile(
 # ISO format for timestamps
 TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%dT%H:%M:%SZ',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
+
 
 def die(msg):
     """Print error and exit with code 1."""
-    print(msg, file=sys.stderr)
+    logger.error(msg)
     sys.exit(1)
 
 
 def check_token():
     """Fail fast if token is missing."""
     if not MCP_TOKEN:
-        die('TG_MCP_TOKEN environment variable not set')
+        logger.error('TG_MCP_TOKEN environment variable not set')
+        sys.exit(1)
 
 
 def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
@@ -87,12 +97,12 @@ def mcp_call(tool: str, params: dict, timeout: int = 30) -> list:
             if e.code in (401, 403):
                 die(f'Auth failed ({e.code}). Check TG_MCP_TOKEN.')
             if attempt < 2:
-                print(f'HTTP error {e.code}, retrying...', file=sys.stderr)
+                logger.warning(f'HTTP error {e.code}, retrying...')
                 continue
             raise
         except Exception as e:
             if attempt < 2:
-                print(f'Error: {e}, retrying...', file=sys.stderr)
+                logger.warning(f'Error: {e}, retrying...')
                 continue
             raise
 
@@ -196,34 +206,34 @@ def git_add_commit_push() -> bool:
 
         r = sub(['git', 'add', 'proxies.txt'])
         if r.returncode != 0:
-            print(f'git add failed: {r.stderr}', file=sys.stderr)
+            logger.error(f'git add failed: {r.stderr}')
             return False
 
         r = sub(['git', 'diff', '--staged', '--quiet'])
         if r.returncode == 1:
             r = sub(['git', 'commit', '-m', f'Update proxies {date.today()}'])
             if r.returncode != 0:
-                print(f'git commit failed: {r.stderr}', file=sys.stderr)
+                logger.error(f'git commit failed: {r.stderr}')
                 return False
 
             r = sub(['git', 'push'])
             if r.returncode != 0:
-                print(f'git push failed: {r.stderr}', file=sys.stderr)
+                logger.error(f'git push failed: {r.stderr}')
                 return False
             return True
         return False
     except subprocess.TimeoutExpired:
-        print('Git command timed out', file=sys.stderr)
+        logger.error('Git command timed out')
         return False
     except Exception as e:
-        print(f'Git error: {e}', file=sys.stderr)
+        logger.error(f'Git error: {e}')
         return False
 
 
 def main():
     check_token()
 
-    print('Fetching proxies from Telegram...')
+    logger.info('Fetching proxies from Telegram...')
     messages = mcp_call('get_messages', {
         'chat_id': TELEGRAM_CHAT,
         'query': 'proxy',
@@ -231,11 +241,11 @@ def main():
     })
 
     if not messages:
-        print('No messages fetched from topic.')
+        logger.warning('No messages fetched from topic.')
         sys.exit(0)
 
     new_proxies = extract_proxies(messages)
-    print(f'Found {len(new_proxies)} unique proxy(s) in messages')
+    logger.info(f'Found {len(new_proxies)} unique proxy(s) in messages')
 
     existing = get_existing_proxies()
     seen = {}
@@ -254,20 +264,20 @@ def main():
     combined = combined[:MAX_PROXIES]
 
     new_count = len(combined) - len(existing)
-    print(f'Adding {max(0, new_count)} new proxy(s) (total: {len(combined)})')
+    logger.info(f'Adding {max(0, new_count)} new proxy(s) (total: {len(combined)})')
 
     if new_count <= 0 and existing == combined:
-        print('No new proxies to add.')
+        logger.info('No new proxies to add.')
         sys.exit(0)
 
     write_proxies_atomic(combined)
 
     pushed = git_add_commit_push()
     if not pushed:
-        print('WARNING: proxies.txt updated locally but git push failed.', file=sys.stderr)
+        logger.error('WARNING: proxies.txt updated locally but git push failed.')
         sys.exit(1)
 
-    print('Done!')
+    logger.info('Done!')
     sys.exit(0)
 
 
