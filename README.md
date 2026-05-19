@@ -15,15 +15,12 @@ Proxy URLs are collected from the [@telemtrs](https://t.me/telemtrs) channel's "
 
 ```
 ├── update_proxies.py      # Main script (run by cron)
-├── scripts/
-│   └── update_proxies.py  # Backup copy
 ├── tests/
 │   └── test_update_proxies.py  # Pytest suite
 ├── docs/
 │   ├── index.html         # Site with proxy list + copy buttons
 │   ├── proxies.txt        # Live proxy URL list
 │   └── CNAME              # tgproxy.l1979.ru
-├── PLAN.md                # Architecture notes
 └── README.md              # This file
 ```
 
