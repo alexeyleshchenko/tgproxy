@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Update Telegram proxy list from @telemtrs Free proxy topic.
-Reads TG_MCP_TOKEN from environment variable or servers.json.
 Stores proxies with timestamps: URL|YYYY-MM-DDTHH:MM:SS
 """
 
@@ -20,11 +19,11 @@ PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
+MCP_BIN = '/root/.local/bin/mcp'
 PROXY_PATTERN = re.compile(
     r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
     r'|tg://proxy\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
 )
-# ISO format for timestamps
 TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 root_logger = logging.getLogger()
@@ -32,7 +31,6 @@ root_logger.setLevel(logging.DEBUG)
 root_logger.handlers.clear()
 root_logger.addHandler(logging.StreamHandler(sys.stdout))
 
-# File-based logging
 LOG_DIR = '/var/log/tgproxy'
 LOG_FILE = os.path.join(LOG_DIR, 'update.log')
 try:
@@ -44,10 +42,10 @@ try:
         datefmt='%Y-%m-%d %H:%M:%S'
     ))
     root_logger.addHandler(file_handler)
-except Exception as e:
-    # Fallback: log to ~/tgproxy/update.log
+except Exception as primary_err:
     LOG_FILE = os.path.expanduser('~/tgproxy/update.log')
     try:
+        os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
         file_handler = logging.FileHandler(LOG_FILE)
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(logging.Formatter(
@@ -55,53 +53,55 @@ except Exception as e:
             datefmt='%Y-%m-%d %H:%M:%S'
         ))
         root_logger.addHandler(file_handler)
-    except Exception:
-        pass
+    except Exception as fallback_err:
+        print(
+            f'Warning: file logging disabled ({primary_err}; {fallback_err})',
+            file=sys.stderr,
+        )
 
 logger = logging.getLogger(__name__)
 
 
 def die(msg):
-    """Print error and exit with code 1."""
+    """Log error and exit with code 1."""
     logger.error(msg)
     sys.exit(1)
 
 
-def mcp_call(tool: str, params: dict, timeout: int = 120) -> list:
-    """Call MCP server via shell command (from tools.toml)."""
-    import re
+def mcp_call(tool: str, params: dict, timeout: int = 120) -> list | None:
+    """
+    Call MCP server via shell command.
+    Returns message list on success (may be empty), or None on failure.
+    """
     args_json = json.dumps(params)
-    cmd = ['/root/.local/bin/mcp', 'tg-mcp', tool, args_json]
+    cmd = [MCP_BIN, 'tg-mcp', tool, args_json]
 
     try:
         proc = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=timeout
+            timeout=timeout,
         )
         if proc.returncode != 0:
-            logger.error(f'MCP failed: {proc.stderr}')
-            return []
+            logger.error(f'MCP failed (exit {proc.returncode}): {proc.stderr}')
+            return None
 
         output = proc.stdout.strip()
         if not output:
             return []
 
-        # Strip ANSI escape codes
         ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
         output = ansi_escape.sub('', output)
 
-        # Find JSON object in output
         start = output.find('{')
         if start == -1:
-            return []
+            logger.error('MCP output contained no JSON object')
+            return None
         json_str = output[start:]
 
-        # Parse outer JSON
         result = json.loads(json_str)
 
-        # Extract messages from content[].text
         messages = []
         for item in result.get('content', []):
             if item.get('type') == 'text':
@@ -113,12 +113,18 @@ def mcp_call(tool: str, params: dict, timeout: int = 120) -> list:
     except subprocess.TimeoutExpired:
         die('MCP call timed out')
     except Exception as e:
-        die(f'MCP call failed: {e}')
-    return []
+        logger.error(f'MCP call failed: {e}')
+        return None
+
+
+def _to_utc_naive(dt: datetime) -> datetime:
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
 
 
 def parse_timestamp(msg: dict) -> str:
-    """Extract timestamp from message date field, return ISO string or empty string."""
+    """Extract UTC timestamp from message date field as ISO string, or empty."""
     raw = msg.get('date')
     if not raw:
         return ''
@@ -127,12 +133,12 @@ def parse_timestamp(msg: dict) -> str:
             ts = raw
             if ts[-1] != 'Z' and '+' not in ts:
                 ts = ts + 'Z'
-            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+            dt = _to_utc_naive(datetime.fromisoformat(ts.replace('Z', '+00:00')))
             return dt.strftime(TS_FORMAT)
         except Exception:
             pass
     try:
-        dt = datetime.fromtimestamp(float(raw))
+        dt = _to_utc_naive(datetime.fromtimestamp(float(raw), tz=timezone.utc))
         return dt.strftime(TS_FORMAT)
     except Exception:
         pass
@@ -142,10 +148,9 @@ def parse_timestamp(msg: dict) -> str:
 def extract_proxies(messages: list) -> list:
     """
     Extract unique proxy URLs from messages with timestamps.
-    Returns list of (url, timestamp) tuples.
-    Sorts by timestamp DESC for determinism.
+    Returns list of (url, timestamp) tuples, newest-first.
     """
-    found = {}  # url -> timestamp (keep first/most recent)
+    found = {}
     for msg in messages:
         text = msg.get('text', '') or msg.get('message', '')
         ts = parse_timestamp(msg)
@@ -159,7 +164,7 @@ def extract_proxies(messages: list) -> list:
 def get_existing_proxies() -> list:
     """
     Load existing proxies from file.
-    Returns list of (url, timestamp) tuples, oldest-first for stable re-insertion.
+    Returns list of (url, timestamp) tuples, oldest-first.
     """
     if not os.path.exists(PROXIES_FILE):
         return []
@@ -181,29 +186,71 @@ def get_existing_proxies() -> list:
 def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES) -> list:
     """
     Merge new and existing proxies, keeping at most max_size total.
-    
-    New proxies are preferred over existing ones.
-    Within each group, order is preserved (newest-first for new, oldest-first for existing).
-    
-    Returns combined list of (url, timestamp) tuples, truncated to max_size.
-    """
-    seen = {}
-    combined = []
 
-    # Add new proxies first (they take priority)
+    All unique new proxies are kept. Remaining slots are filled from existing
+    entries not already present, preferring the newest by timestamp. When over
+    capacity, the oldest entries are dropped.
+
+    Returns (url, timestamp) tuples, newest-first.
+    """
+    seen = set()
+    merged_new = []
     for url, ts in new_proxies:
         if url not in seen:
-            seen[url] = True
-            combined.append((url, ts))
+            seen.add(url)
+            merged_new.append((url, ts))
 
-    # Then add existing proxies that aren't in new
+    existing_extra = []
     for url, ts in existing:
         if url not in seen:
-            seen[url] = True
-            combined.append((url, ts))
+            seen.add(url)
+            existing_extra.append((url, ts))
 
-    # Truncate to max_size
-    return combined[:max_size]
+    slots = max(0, max_size - len(merged_new))
+    existing_extra.sort(key=lambda x: (x[1] or '', x[0]), reverse=True)
+    kept_existing = existing_extra[:slots]
+
+    combined = merged_new + kept_existing
+    combined.sort(key=lambda x: (x[1] or '', x[0]), reverse=True)
+    return combined
+
+
+def proxies_unchanged(combined: list, existing: list) -> bool:
+    """True when URL set and timestamps match (order ignored)."""
+    return sorted(combined, key=lambda x: x[0]) == sorted(existing, key=lambda x: x[0])
+
+
+def read_proxies_file_bytes() -> bytes | None:
+    if not os.path.exists(PROXIES_FILE):
+        return None
+    with open(PROXIES_FILE, 'rb') as f:
+        return f.read()
+
+
+def restore_proxies_file(backup: bytes | None):
+    """Restore proxies.txt from pre-write backup."""
+    if backup is None:
+        if os.path.exists(PROXIES_FILE):
+            os.unlink(PROXIES_FILE)
+        return
+    with open(PROXIES_FILE, 'wb') as f:
+        f.write(backup)
+
+
+def undo_last_commit():
+    """Drop the last local commit; working tree should already match restored file."""
+    subprocess.run(
+        ['git', 'reset', '--mixed', 'HEAD~1'],
+        cwd=REPO_DIR,
+        capture_output=True,
+        timeout=60,
+    )
+    subprocess.run(
+        ['git', 'checkout', '--', 'docs/proxies.txt'],
+        cwd=REPO_DIR,
+        capture_output=True,
+        timeout=60,
+    )
 
 
 def write_proxies_atomic(proxies: list):
@@ -229,41 +276,47 @@ def write_proxies_atomic(proxies: list):
         raise
 
 
-def git_add_commit_push() -> bool:
-    """Git add, commit, push. Returns True on success, False on failure."""
+def git_add_commit_push() -> str:
+    """
+    Git add, commit, push.
+    Returns: 'pushed', 'no_changes', 'failed', or 'push_failed'.
+    """
     try:
         sub = lambda cmd: subprocess.run(
             cmd,
             cwd=REPO_DIR,
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=60,
         )
 
         r = sub(['git', 'add', 'docs/proxies.txt'])
         if r.returncode != 0:
             logger.error(f'git add failed: {r.stderr}')
-            return False
+            return 'failed'
 
         r = sub(['git', 'diff', '--staged', '--quiet'])
         if r.returncode == 1:
-            r = sub(['git', 'commit', '-m', f'Update proxies {date.today()}'])
+            commit_msg = (
+                f'Update proxies {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}'
+            )
+            r = sub(['git', 'commit', '-m', commit_msg])
             if r.returncode != 0:
                 logger.error(f'git commit failed: {r.stderr}')
-                return False
+                return 'failed'
 
             r = sub(['git', 'push'])
             if r.returncode != 0:
                 logger.error(f'git push failed: {r.stderr}')
-                return False
-            return True
-        return False
+                return 'push_failed'
+            return 'pushed'
+        return 'no_changes'
     except subprocess.TimeoutExpired:
         logger.error('Git command timed out')
-        return False
+        return 'failed'
     except Exception as e:
         logger.error(f'Git error: {e}')
-        return False
+        return 'failed'
 
 
 def main():
@@ -272,9 +325,11 @@ def main():
         'chat_id': TELEGRAM_CHAT,
         'query': 'proxy',
         'limit': 200,
-        'reply_to_id': TOPIC_ID
+        'reply_to_id': TOPIC_ID,
     })
 
+    if messages is None:
+        die('MCP call failed')
     if not messages:
         logger.warning('No messages fetched from topic.')
         sys.exit(0)
@@ -285,26 +340,31 @@ def main():
     existing = get_existing_proxies()
     combined = merge_proxies(new_proxies, existing)
 
-    # Sort for comparison (combined is [newest first], existing is [oldest first])
-    combined_sorted = sorted(combined, key=lambda x: x[0])
-    existing_sorted = sorted(existing, key=lambda x: x[0])
+    new_urls = {u for u, _ in combined} - {u for u, _ in existing}
+    removed_urls = {u for u, _ in existing} - {u for u, _ in combined}
+    logger.info(
+        f'New: {len(new_urls)}, removed: {len(removed_urls)}, total: {len(combined)}'
+    )
 
-    new_count = len(combined) - len(existing)
-    logger.info(f'Adding {max(0, new_count)} new proxy(s) (total: {len(combined)})')
-
-    if new_count <= 0 and combined_sorted == existing_sorted:
-        logger.info('No new proxies to add.')
+    if proxies_unchanged(combined, existing):
+        logger.info('No changes to proxies list.')
         sys.exit(0)
 
+    backup = read_proxies_file_bytes()
     write_proxies_atomic(combined)
 
-    pushed = git_add_commit_push()
-    if not pushed:
-        logger.error('WARNING: proxies.txt updated locally but git push failed.')
-        sys.exit(1)
+    git_result = git_add_commit_push()
+    if git_result == 'pushed':
+        logger.info('Done!')
+        sys.exit(0)
 
-    logger.info('Done!')
-    sys.exit(0)
+    restore_proxies_file(backup)
+    if git_result == 'push_failed':
+        undo_last_commit()
+        die('proxies.txt reverted: git push failed after local commit')
+    if git_result == 'no_changes':
+        die('proxies.txt reverted: git reported no staged changes after write')
+    die('proxies.txt reverted: git add/commit failed')
 
 
 if __name__ == '__main__':

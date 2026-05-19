@@ -187,6 +187,15 @@
                 groups[label].proxies.push(p);
             }
 
+            for (const group of Object.values(groups)) {
+                group.proxies.sort((a, b) => {
+                    if (a.timestamp === b.timestamp) return 0;
+                    if (!a.timestamp) return 1;
+                    if (!b.timestamp) return -1;
+                    return b.timestamp.localeCompare(a.timestamp);
+                });
+            }
+
             // Sort groups by date DESC (newest first)
             // Unknown date goes last
             const sorted = Object.values(groups).sort((a, b) => {
@@ -233,7 +242,6 @@
                     divider.innerHTML = '<span class="date-divider-text">' + group.label + '</span>';
                     container.appendChild(divider);
 
-                    // Add proxies in this group (already sorted by timestamp DESC within group)
                     for (const p of group.proxies) {
                         const item = document.createElement('div');
                         item.className = 'proxy-item';
