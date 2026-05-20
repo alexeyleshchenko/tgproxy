@@ -16,6 +16,7 @@ from update_proxies import (
     merge_proxies,
     parse_timestamp,
     proxies_unchanged,
+    sanitize_proxy_url,
     write_proxies_atomic,
 )
 
@@ -128,6 +129,38 @@ class TestParseTimestamp:
         assert parse_timestamp({}) == ''
 
 
+class TestSanitizeProxyUrl:
+    """Strip Telegram markdown junk captured after proxy URLs."""
+
+    DIMSS_SECRET = (
+        'eebed92191281b6d7a676b052f2797cad9726164696f7265636f72642e7275'
+    )
+    DIMSS_BASE = (
+        f'tg://proxy?server=s01.dimasssss.space&port=443&secret={DIMSS_SECRET}'
+    )
+
+    def test_strips_trailing_paren(self):
+        assert sanitize_proxy_url(self.DIMSS_BASE + ')') == self.DIMSS_BASE
+
+    def test_strips_trailing_markdown_bold(self):
+        relay_secret = (
+            'ee17fdfa167f6babdb3f893586ac3784977375623372656c61792e6475636b646e732e6f7267'
+        )
+        base = f'tg://proxy?server=sub3relay.duckdns.org&port=8443&secret={relay_secret}'
+        assert sanitize_proxy_url(base + ')**') == base
+
+    def test_strips_bracket_link_tail(self):
+        google_secret = (
+            'eebe3007e927acd147dde12bee8b1a7c9364726976652e676f6f676c652e636f6d'
+        )
+        base = f'tg://proxy?server=s1.dimasssss.space&port=443&secret={google_secret}'
+        assert sanitize_proxy_url(base + ')[Free') == base
+
+    def test_clean_url_unchanged(self):
+        url = 'tg://proxy?server=example.com&port=443&secret=abc123'
+        assert sanitize_proxy_url(url) == url
+
+
 class TestExtractProxies:
     def test_extracts_from_text(self):
         url = "tg://proxy?server=example.com&port=443&secret=abc"
@@ -146,6 +179,31 @@ class TestExtractProxies:
             {'text': url, 'date': '2026-05-18T10:00:00Z'},
         ]
         assert len(extract_proxies(messages)) == 1
+
+    def test_strips_markdown_from_message_text(self):
+        secret = 'eebed92191281b6d7a676b052f2797cad9726164696f7265636f72642e7275'
+        clean = f'tg://proxy?server=s01.dimasssss.space&port=443&secret={secret}'
+        messages = [
+            {
+                'text': f'[{clean})](https://example.com)',
+                'date': '2026-03-19T17:33:47Z',
+            },
+        ]
+        found = extract_proxies(messages)
+        assert len(found) == 1
+        assert found[0][0] == clean
+
+    def test_strips_bold_markdown_wrapper(self):
+        secret = (
+            'ee17fdfa167f6babdb3f893586ac3784977375623372656c61792e6475636b646e732e6f7267'
+        )
+        clean = f'tg://proxy?server=sub3relay.duckdns.org&port=8443&secret={secret}'
+        messages = [
+            {'text': f'**{clean})**', 'date': '2026-05-01T13:58:52Z'},
+        ]
+        found = extract_proxies(messages)
+        assert len(found) == 1
+        assert found[0][0] == clean
 
 
 class TestProxyMerge:
@@ -206,6 +264,16 @@ class TestProxiesUnchanged:
 
 
 class TestGetExistingProxies:
+    def test_sanitizes_urls_on_load(self, tmp_path, monkeypatch):
+        import update_proxies as mod
+        secret = 'eebed92191281b6d7a676b052f2797cad9726164696f7265636f72642e7275'
+        clean = f'tg://proxy?server=s01.dimasssss.space&port=443&secret={secret}'
+        path = tmp_path / 'proxies.txt'
+        path.write_text(f'{clean})|2026-03-19T17:33:47\n')
+        monkeypatch.setattr(mod, 'PROXIES_FILE', str(path))
+        loaded = get_existing_proxies()
+        assert loaded[0][0] == clean
+
     def test_loads_file(self, tmp_path, monkeypatch):
         import update_proxies as mod
         path = tmp_path / 'proxies.txt'

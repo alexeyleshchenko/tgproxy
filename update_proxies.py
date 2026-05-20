@@ -21,8 +21,8 @@ TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
 TG_MCP_CALL = os.environ.get('TG_MCP_CALL', '/usr/local/bin/tg-mcp-call')
 PROXY_PATTERN = re.compile(
-    r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
-    r'|tg://proxy\?server=[^&\s]+&port=[^&\s]+&secret=[^&\s]+'
+    r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
+    r'|tg://proxy\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
 )
 TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
@@ -150,6 +150,12 @@ def parse_timestamp(msg: dict) -> str:
     return ''
 
 
+def sanitize_proxy_url(url: str) -> str:
+    """Return proxy URL without Telegram markdown junk in the secret field."""
+    match = PROXY_PATTERN.search(url)
+    return match.group(0) if match else url
+
+
 def extract_proxies(messages: list) -> list:
     """
     Extract unique proxy URLs from messages with timestamps.
@@ -160,7 +166,7 @@ def extract_proxies(messages: list) -> list:
         text = msg.get('text', '') or msg.get('message', '')
         ts = parse_timestamp(msg)
         for match in PROXY_PATTERN.finditer(text):
-            url = match.group(0)
+            url = sanitize_proxy_url(match.group(0))
             if url not in found or (ts and found[url] == ''):
                 found[url] = ts
     return sorted(found.items(), key=lambda x: (x[1] or '', x[0]), reverse=True)
@@ -181,9 +187,9 @@ def get_existing_proxies() -> list:
                 continue
             if '|' in line:
                 url, ts = line.rsplit('|', 1)
-                result.append((url.strip(), ts.strip()))
+                result.append((sanitize_proxy_url(url.strip()), ts.strip()))
             else:
-                result.append((line, ''))
+                result.append((sanitize_proxy_url(line), ''))
     result.sort(key=lambda x: (x[1] or '', x[0]))
     return result
 
