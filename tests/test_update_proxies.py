@@ -178,6 +178,16 @@ class TestProxyMerge:
         timestamps = [ts for _, ts in merged]
         assert timestamps == sorted(timestamps, reverse=True)
 
+    def test_caps_when_new_exceeds_max_size(self):
+        new_proxies = make_proxies("tg://new{}|secret", 47, start_day=0)
+        merged = merge_proxies(new_proxies, [], max_size=30)
+        assert len(merged) == 30
+        merged_urls = [u for u, _ in merged]
+        for i in range(30):
+            assert any(f"new{i}" in u for u in merged_urls)
+        for i in range(30, 47):
+            assert not any(f"new{i}" in u for u in merged_urls)
+
 
 class TestProxiesUnchanged:
     def test_same_set_and_timestamps(self):

@@ -192,9 +192,10 @@ def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES
     """
     Merge new and existing proxies, keeping at most max_size total.
 
-    All unique new proxies are kept. Remaining slots are filled from existing
-    entries not already present, preferring the newest by timestamp. When over
-    capacity, the oldest entries are dropped.
+    New proxies are preferred over existing ones. Remaining slots are filled from
+    existing entries not already present, preferring the newest by timestamp.
+    The result is capped at max_size; when over capacity, the oldest entries
+    are dropped.
 
     Returns (url, timestamp) tuples, newest-first.
     """
@@ -217,7 +218,7 @@ def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES
 
     combined = merged_new + kept_existing
     combined.sort(key=lambda x: (x[1] or '', x[0]), reverse=True)
-    return combined
+    return combined[:max_size]
 
 
 def proxies_unchanged(combined: list, existing: list) -> bool:
