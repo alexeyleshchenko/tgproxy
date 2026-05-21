@@ -1,125 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Proxy List — tgproxy.l1979.ru</title>
     <meta name="description" content="Auto-updated list of Telegram proxy servers from @telemtrs Free proxy topic">
     <meta name="author" content="leshchenko1979">
-    <meta name="theme-color" content="#1a1a2e">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%234fc3f7'/><circle cx='50' cy='50' r='20' fill='%231a1a2e'/><circle cx='50' cy='50' r='8' fill='%234fc3f7'/></svg>">
+    <meta name="theme-color" content="#17212b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%232AABEE'/><stop offset='100%25' stop-color='%232291ED'/></linearGradient></defs><circle cx='120' cy='120' r='120' fill='url(%23g)'/><path fill='%23fff' d='M81 118l38 14 52-40c2.4-1.8 4.6-.8 2.8 1.6L137 168l-4 36c-.6 4.8-2.2 6-4.4 3.8l-12-11-23 17c-2.6 2.2-5 1-3-1.2l17-25 42-37c1.8-1.6.4-2.4-1.4-.9L81 118z'/></svg>">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --tg-blue: #2aabee;
+            --tg-blue-dark: #229ed9;
+            --tg-blue-link: #6ab3f3;
+            --tg-bg: #17212b;
+            --tg-bg-secondary: #242f3d;
+            --tg-bg-tertiary: #232e3c;
+            --tg-header-bg: #17212b;
+            --tg-text: #f5f5f5;
+            --tg-hint: #708499;
+            --tg-divider: rgba(255, 255, 255, 0.08);
+            --tg-button: #2481cc;
+            --tg-button-hover: #1a6ead;
+            --tg-success: #4dcd5e;
+            --tg-date-pill: rgba(39, 50, 63, 0.92);
+            --tg-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+            --tg-radius: 12px;
+            --tg-radius-sm: 8px;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --tg-bg: #ffffff;
+                --tg-bg-secondary: #f4f4f5;
+                --tg-bg-tertiary: #efeff0;
+                --tg-header-bg: #ffffff;
+                --tg-text: #000000;
+                --tg-hint: #707579;
+                --tg-divider: rgba(0, 0, 0, 0.08);
+                --tg-button: #2481cc;
+                --tg-button-hover: #1a6ead;
+                --tg-date-pill: rgba(0, 0, 0, 0.18);
+                --tg-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--tg-bg);
+            color: var(--tg-text);
             min-height: 100vh;
-            padding: 2rem;
+            line-height: 1.45;
+            -webkit-font-smoothing: antialiased;
         }
-        .container {
-            max-width: 800px;
+
+        .tg-header {
+            background: var(--tg-header-bg);
+            border-bottom: 1px solid var(--tg-divider);
+            padding: 1rem 1.25rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+        }
+
+        .tg-header-inner {
+            max-width: 720px;
             margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
         }
-        h1 {
-            text-align: center;
-            margin-bottom: 0.5rem;
-            color: #4fc3f7;
+
+        .tg-logo {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--tg-blue) 0%, var(--tg-blue-dark) 100%);
+            box-shadow: var(--tg-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .tg-logo svg {
+            width: 26px;
+            height: 26px;
+            display: block;
+        }
+
+        .tg-header-text h1 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--tg-text);
+        }
+
         .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
+            color: var(--tg-hint);
+            font-size: 0.8125rem;
+            margin-top: 0.125rem;
         }
+
+        .subtitle a {
+            color: var(--tg-blue-link);
+            text-decoration: none;
+        }
+
+        .subtitle a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 1.25rem 1rem 2.5rem;
+        }
+
+        .count {
+            text-align: center;
+            color: var(--tg-hint);
+            margin-bottom: 1.25rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
         .proxy-list {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
+
         .date-divider {
             display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin: 1.5rem 0 0.75rem;
-            color: #888;
-            font-size: 0.85rem;
-            font-weight: 600;
+            justify-content: center;
+            margin: 1.25rem 0 0.625rem;
         }
-        .date-divider::before,
-        .date-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #333;
+
+        .date-divider:first-child {
+            margin-top: 0;
         }
+
         .date-divider-text {
-            color: #4fc3f7;
-            white-space: nowrap;
+            background: var(--tg-date-pill);
+            color: #fff;
+            padding: 0.3125rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            box-shadow: var(--tg-shadow);
         }
+
         .proxy-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            background: #16213e;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #0f3460;
+            gap: 0.75rem;
+            background: var(--tg-bg-secondary);
+            padding: 0.875rem 1rem;
+            border-radius: var(--tg-radius);
+            border: 1px solid var(--tg-divider);
+            transition: background 0.15s ease;
         }
+
+        .proxy-item:hover {
+            background: var(--tg-bg-tertiary);
+        }
+
         .proxy-url {
             flex: 1;
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #81d4fa;
+            font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.8125rem;
+            color: var(--tg-blue-link);
             word-break: break-all;
+            text-decoration: none;
+            line-height: 1.4;
         }
+
         .proxy-url:hover {
-            color: #4fc3f7;
+            color: var(--tg-blue);
+            text-decoration: underline;
         }
+
         .copy-btn {
-            background: #4fc3f7;
-            color: #1a1a2e;
+            background: var(--tg-button);
+            color: #fff;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            padding: 0.4375rem 0.875rem;
+            border-radius: var(--tg-radius-sm);
             cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            min-width: 80px;
+            font-family: inherit;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            transition: background 0.15s ease, transform 0.1s ease;
+            min-width: 72px;
+            flex-shrink: 0;
         }
+
         .copy-btn:hover {
-            background: #29b6f6;
+            background: var(--tg-button-hover);
         }
+
+        .copy-btn:active {
+            transform: scale(0.97);
+        }
+
         .copy-btn:focus-visible {
-            outline: 2px solid #81d4fa;
+            outline: 2px solid var(--tg-blue);
             outline-offset: 2px;
         }
+
         .copy-btn.copied {
-            background: #66bb6a;
+            background: var(--tg-success);
         }
+
         .state {
             text-align: center;
-            color: #888;
-            padding: 2rem;
+            color: var(--tg-hint);
+            padding: 3rem 1rem;
+            font-size: 0.9375rem;
         }
-        .count {
+
+        .tg-footer {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
             text-align: center;
-            color: #666;
-            margin-bottom: 1.5rem;
-            font-size: 0.8rem;
+            color: var(--tg-hint);
+            font-size: 0.75rem;
+        }
+
+        .tg-footer a {
+            color: var(--tg-blue-link);
+            text-decoration: none;
+        }
+
+        .tg-footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
+
 <body>
+    <header class="tg-header">
+        <div class="tg-header-inner">
+            <div class="tg-logo" aria-hidden="true">
+                <svg viewBox="-0.999 0.239 25.998 25.998" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#fff" transform="translate(-1.259, 0)" d="M9.417 15.181l-.397 5.584c.568 0 .814-.244 1.109-.537l2.663-2.545 5.518 4.041c1.012.564 1.725.267 1.998-.931L23.93 3.821c.321-1.431-.541-1.991-1.512-1.642L1.114 9.989c-1.453.564-1.431 1.374-.247 1.741l5.763 1.798L18.874 5.87c.645-.429 1.236-.191.751.239" />
+                </svg>
+            </div>
+            <div class="tg-header-text">
+                <h1>Telegram Proxy List</h1>
+                <p class="subtitle">Auto-updated daily from <a href="https://t.me/telemtrs" target="_blank"
+                        rel="noopener noreferrer">@telemtrs</a> — Free proxy topic</p>
+            </div>
+        </div>
+    </header>
+
     <div class="container">
-        <h1>📡 Telegram Proxy List</h1>
-        <p class="subtitle">Auto-updated daily from @telemtrs — Free proxy topic</p>
         <p class="count" id="count"></p>
         <div class="proxy-list" id="proxy-list">
             <div class="state">Loading...</div>
         </div>
     </div>
+
+    <footer class="tg-footer">
+        Powered by <a href="https://telegram.org/" target="_blank" rel="noopener noreferrer">Telegram</a> proxy protocol
+        · <a href="https://t.me/telemtrs" target="_blank" rel="noopener noreferrer">Source channel</a>
+    </footer>
 
     <script>
         const MONTHS = [
@@ -270,7 +430,7 @@
             }
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const btn = e.target.closest('.copy-btn');
             if (!btn) return;
 
@@ -299,4 +459,5 @@
         loadProxies();
     </script>
 </body>
+
 </html>
