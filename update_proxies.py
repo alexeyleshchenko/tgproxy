@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import date, datetime, timezone
+from urllib.parse import parse_qs, urlparse
 
 # === CONFIG ===
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -156,6 +157,50 @@ def sanitize_proxy_url(url: str) -> str:
     return match.group(0) if match else url
 
 
+def proxy_identity(url: str) -> tuple[str, str, str] | None:
+    """Return (server, port, secret) identity for deduplication, or None."""
+    match = PROXY_PATTERN.search(url)
+    if not match:
+        return None
+    params = parse_qs(urlparse(match.group(0)).query)
+    try:
+        server = params['server'][0]
+        port = params['port'][0]
+        secret = params['secret'][0]
+    except (KeyError, IndexError):
+        return None
+    return (server.lower(), port, secret.lower())
+
+
+def prefer_proxy_url(current: str, candidate: str) -> str:
+    """Pick the stored URL when two links refer to the same proxy."""
+    def rank(u: str) -> int:
+        if u.startswith('tg://proxy'):
+            return 0
+        if u.startswith('https://t.me/proxy'):
+            return 1
+        if u.startswith('https://t.me/socks'):
+            return 2
+        if u.startswith('https://t.me/killer'):
+            return 3
+        return 4
+
+    return candidate if rank(candidate) < rank(current) else current
+
+
+def _store_proxy(found: dict, url: str, ts: str):
+    """Insert or merge a proxy entry keyed by server/port/secret identity."""
+    identity = proxy_identity(url)
+    if identity is None:
+        return
+    if identity not in found:
+        found[identity] = (url, ts)
+        return
+    prev_url, prev_ts = found[identity]
+    merged_ts = prev_ts if prev_ts or not ts else ts
+    found[identity] = (prefer_proxy_url(prev_url, url), merged_ts)
+
+
 def extract_proxies(messages: list) -> list:
     """
     Extract unique proxy URLs from messages with timestamps.
@@ -167,9 +212,8 @@ def extract_proxies(messages: list) -> list:
         ts = parse_timestamp(msg)
         for match in PROXY_PATTERN.finditer(text):
             url = sanitize_proxy_url(match.group(0))
-            if url not in found or (ts and found[url] == ''):
-                found[url] = ts
-    return sorted(found.items(), key=lambda x: (x[1] or '', x[0]), reverse=True)
+            _store_proxy(found, url, ts)
+    return sorted(found.values(), key=lambda x: (x[1] or '', x[0]), reverse=True)
 
 
 def get_existing_proxies() -> list:
@@ -205,25 +249,32 @@ def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES
 
     Returns (url, timestamp) tuples, newest-first.
     """
-    seen = set()
-    merged_new = []
+    found = {}
     for url, ts in new_proxies:
-        if url not in seen:
-            seen.add(url)
-            merged_new.append((url, ts))
+        _store_proxy(found, url, ts)
 
-    existing_extra = []
+    existing_extra = {}
     for url, ts in existing:
-        if url not in seen:
-            seen.add(url)
-            existing_extra.append((url, ts))
+        identity = proxy_identity(url)
+        if identity is None:
+            continue
+        if identity in found:
+            prev_url, prev_ts = found[identity]
+            merged_ts = prev_ts if prev_ts or not ts else ts
+            found[identity] = (prefer_proxy_url(prev_url, url), merged_ts)
+            continue
+        _store_proxy(existing_extra, url, ts)
 
-    slots = max(0, max_size - len(merged_new))
-    existing_extra.sort(key=lambda x: (x[1] or '', x[0]), reverse=True)
-    kept_existing = existing_extra[:slots]
+    slots = max(0, max_size - len(found))
+    kept_existing = sorted(
+        existing_extra.values(),
+        key=lambda x: (x[1] or '', x[0]),
+        reverse=True,
+    )[:slots]
+    for url, ts in kept_existing:
+        _store_proxy(found, url, ts)
 
-    combined = merged_new + kept_existing
-    combined.sort(key=lambda x: (x[1] or '', x[0]), reverse=True)
+    combined = sorted(found.values(), key=lambda x: (x[1] or '', x[0]), reverse=True)
     return combined[:max_size]
 
 

@@ -15,7 +15,9 @@ from update_proxies import (
     get_existing_proxies,
     merge_proxies,
     parse_timestamp,
+    prefer_proxy_url,
     proxies_unchanged,
+    proxy_identity,
     sanitize_proxy_url,
     write_proxies_atomic,
 )
@@ -107,8 +109,14 @@ def make_proxy(url, days_ago):
     return (url, ts.strftime(TS_FORMAT))
 
 
-def make_proxies(url_template, count, start_day, step=1):
-    return [make_proxy(url_template.format(i), start_day + i * step) for i in range(count)]
+def make_proxies(prefix, count, start_day, step=1):
+    return [
+        make_proxy(
+            f'tg://proxy?server={prefix}{i}.test&port=443&secret=abc123',
+            start_day + i * step,
+        )
+        for i in range(count)
+    ]
 
 
 class TestParseTimestamp:
@@ -161,6 +169,26 @@ class TestSanitizeProxyUrl:
         assert sanitize_proxy_url(url) == url
 
 
+class TestProxyIdentity:
+    SECRET = 'eeeb1d43653f046c18653280379226bee17275747562652e7275'
+
+    def test_same_proxy_different_schemes(self):
+        tg = f'tg://proxy?server=ru.vip.mambabot.net&port=443&secret={self.SECRET}'
+        https = f'https://t.me/proxy?server=ru.vip.mambabot.net&port=443&secret={self.SECRET}'
+        assert proxy_identity(tg) == proxy_identity(https)
+
+    def test_different_secrets_not_equal(self):
+        a = 'tg://proxy?server=example.com&port=443&secret=abc'
+        b = 'tg://proxy?server=example.com&port=443&secret=def'
+        assert proxy_identity(a) != proxy_identity(b)
+
+    def test_prefer_tg_over_https(self):
+        tg = 'tg://proxy?server=example.com&port=443&secret=abc'
+        https = 'https://t.me/proxy?server=example.com&port=443&secret=abc'
+        assert prefer_proxy_url(https, tg) == tg
+        assert prefer_proxy_url(tg, https) == tg
+
+
 class TestExtractProxies:
     def test_extracts_from_text(self):
         url = "tg://proxy?server=example.com&port=443&secret=abc"
@@ -179,6 +207,19 @@ class TestExtractProxies:
             {'text': url, 'date': '2026-05-18T10:00:00Z'},
         ]
         assert len(extract_proxies(messages)) == 1
+
+    def test_deduplicates_tg_and_https_schemes(self):
+        secret = 'eeeb1d43653f046c18653280379226bee17275747562652e7275'
+        tg = f'tg://proxy?server=ru.vip.mambabot.net&port=443&secret={secret}'
+        https = f'https://t.me/proxy?server=ru.vip.mambabot.net&port=443&secret={secret}'
+        messages = [
+            {'text': tg, 'date': '2026-05-15T21:37:22Z'},
+            {'text': https, 'date': '2026-05-18T17:55:54Z'},
+        ]
+        found = extract_proxies(messages)
+        assert len(found) == 1
+        assert found[0][0] == tg
+        assert found[0][1] == '2026-05-15T21:37:22'
 
     def test_strips_markdown_from_message_text(self):
         secret = 'eebed92191281b6d7a676b052f2797cad9726164696f7265636f72642e7275'
@@ -208,8 +249,8 @@ class TestExtractProxies:
 
 class TestProxyMerge:
     def test_25_existing_10_new_preserves_all_new(self):
-        new_proxies = make_proxies("tg://new{}|secret", 10, start_day=0)
-        existing = make_proxies("tg://existing{}|secret", 25, start_day=10)
+        new_proxies = make_proxies("new", 10, start_day=0)
+        existing = make_proxies("existing", 25, start_day=10)
 
         merged = merge_proxies(new_proxies, existing)
 
@@ -219,8 +260,8 @@ class TestProxyMerge:
             assert any(f"new{i}" in url for url in all_urls)
 
     def test_truncation_drops_oldest_existing(self):
-        new_proxies = make_proxies("tg://new{}|secret", 10, start_day=0)
-        existing = make_proxies("tg://existing{}|secret", 25, start_day=10)
+        new_proxies = make_proxies("new", 10, start_day=0)
+        existing = make_proxies("existing", 25, start_day=10)
 
         merged = merge_proxies(new_proxies, existing)
         merged_urls = [u for u, _ in merged]
@@ -231,13 +272,21 @@ class TestProxyMerge:
         assert any("existing19" in u for u in merged_urls)
 
     def test_newest_first_order(self):
-        proxies = make_proxies("tg://p{}|secret", 3, start_day=0)
+        proxies = make_proxies("p", 3, start_day=0)
         merged = merge_proxies(proxies, [])
         timestamps = [ts for _, ts in merged]
         assert timestamps == sorted(timestamps, reverse=True)
 
+    def test_merges_scheme_variants(self):
+        secret = 'eeeb1d43653f046c18653280379226bee17275747562652e7275'
+        tg = (f'tg://proxy?server=ru.vip.mambabot.net&port=443&secret={secret}', '2026-05-15T21:37:22')
+        https = (f'https://t.me/proxy?server=ru.vip.mambabot.net&port=443&secret={secret}', '2026-05-18T17:55:54')
+        merged = merge_proxies([https], [tg])
+        assert len(merged) == 1
+        assert merged[0][0] == tg[0]
+
     def test_caps_when_new_exceeds_max_size(self):
-        new_proxies = make_proxies("tg://new{}|secret", 47, start_day=0)
+        new_proxies = make_proxies("new", 47, start_day=0)
         merged = merge_proxies(new_proxies, [], max_size=30)
         assert len(merged) == 30
         merged_urls = [u for u, _ in merged]
@@ -249,16 +298,16 @@ class TestProxyMerge:
 
 class TestProxiesUnchanged:
     def test_same_set_and_timestamps(self):
-        a = make_proxies("tg://a{}|secret", 2, start_day=0)
+        a = make_proxies("a", 2, start_day=0)
         assert proxies_unchanged(a, list(a))
 
     def test_different_url(self):
-        a = make_proxies("tg://a{}|secret", 2, start_day=0)
-        b = make_proxies("tg://b{}|secret", 2, start_day=0)
+        a = make_proxies("a", 2, start_day=0)
+        b = make_proxies("b", 2, start_day=0)
         assert not proxies_unchanged(a, b)
 
     def test_order_ignored(self):
-        a = make_proxies("tg://a{}|secret", 2, start_day=0)
+        a = make_proxies("a", 2, start_day=0)
         b = list(reversed(a))
         assert proxies_unchanged(a, b)
 
