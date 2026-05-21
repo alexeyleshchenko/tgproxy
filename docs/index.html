@@ -294,6 +294,12 @@
             return MONTHS[month - 1] + ' ' + day + ', ' + year;
         }
 
+        function toTgUrl(url) {
+            if (url.startsWith('tg://')) return url;
+            const match = url.match(/^https:\/\/t\.me\/(proxy|socks|killer)\?(.+)$/);
+            return match ? 'tg://' + match[1] + '?' + match[2] : url;
+        }
+
         function parseProxies(lines) {
             // Returns array of {url, timestamp, date} objects
             // timestamp is ISO string YYYY-MM-DDTHH:MM:SS or empty
@@ -314,7 +320,7 @@
                 }
 
                 const date = timestamp ? timestamp.substring(0, 10) : '';
-                result.push({ url, timestamp, date });
+                result.push({ url: toTgUrl(url), timestamp, date });
             }
             return result;
         }

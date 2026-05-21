@@ -14,6 +14,7 @@ from update_proxies import (
     extract_proxies,
     get_existing_proxies,
     merge_proxies,
+    normalize_to_tg_url,
     parse_timestamp,
     prefer_proxy_url,
     proxies_unchanged,
@@ -167,6 +168,33 @@ class TestSanitizeProxyUrl:
     def test_clean_url_unchanged(self):
         url = 'tg://proxy?server=example.com&port=443&secret=abc123'
         assert sanitize_proxy_url(url) == url
+
+
+class TestNormalizeToTgUrl:
+    SECRET = 'eeeb1d43653f046c18653280379226bee17275747562652e7275'
+
+    def test_leaves_tg_unchanged(self):
+        url = f'tg://proxy?server=example.com&port=443&secret={self.SECRET}'
+        assert normalize_to_tg_url(url) == url
+
+    def test_converts_https_proxy(self):
+        https = f'https://t.me/proxy?server=example.com&port=443&secret={self.SECRET}'
+        tg = f'tg://proxy?server=example.com&port=443&secret={self.SECRET}'
+        assert normalize_to_tg_url(https) == tg
+
+    def test_converts_https_socks(self):
+        https = 'https://t.me/socks?server=example.com&port=1080&secret=abc123'
+        assert normalize_to_tg_url(https) == 'tg://socks?server=example.com&port=1080&secret=abc123'
+
+    def test_converts_https_killer(self):
+        https = 'https://t.me/killer?server=example.com&port=443&secret=abc123'
+        assert normalize_to_tg_url(https) == 'tg://killer?server=example.com&port=443&secret=abc123'
+
+    def test_strips_markdown_junk(self):
+        secret = 'eebed92191281b6d7a676b052f2797cad9726164696f7265636f72642e7275'
+        dirty = f'https://t.me/proxy?server=s01.dimasssss.space&port=443&secret={secret})'
+        clean = f'tg://proxy?server=s01.dimasssss.space&port=443&secret={secret}'
+        assert normalize_to_tg_url(dirty) == clean
 
 
 class TestProxyIdentity:
@@ -327,14 +355,15 @@ class TestGetExistingProxies:
         import update_proxies as mod
         path = tmp_path / 'proxies.txt'
         path.write_text(
-            "tg://proxy?server=a&port=1&secret=x|2026-01-01T00:00:00\n"
+            "https://t.me/proxy?server=a&port=1&secret=x|2026-01-01T00:00:00\n"
             "tg://proxy?server=b&port=2&secret=y\n"
         )
         monkeypatch.setattr(mod, 'PROXIES_FILE', str(path))
         loaded = get_existing_proxies()
         assert len(loaded) == 2
-        assert 'server=b' in loaded[0][0]
+        assert loaded[0][0] == 'tg://proxy?server=b&port=2&secret=y'
         assert loaded[0][1] == ''
+        assert loaded[1][0] == 'tg://proxy?server=a&port=1&secret=x'
 
 
 class TestWriteProxiesAtomic:

@@ -157,6 +157,18 @@ def sanitize_proxy_url(url: str) -> str:
     return match.group(0) if match else url
 
 
+def normalize_to_tg_url(url: str) -> str:
+    """Convert t.me proxy links to tg:// scheme."""
+    clean = sanitize_proxy_url(url)
+    if clean.startswith('tg://'):
+        return clean
+    parsed = urlparse(clean)
+    kind = parsed.path.lstrip('/')
+    if kind and parsed.query:
+        return f'tg://{kind}?{parsed.query}'
+    return clean
+
+
 def proxy_identity(url: str) -> tuple[str, str, str] | None:
     """Return (server, port, secret) identity for deduplication, or None."""
     match = PROXY_PATTERN.search(url)
@@ -190,6 +202,7 @@ def prefer_proxy_url(current: str, candidate: str) -> str:
 
 def _store_proxy(found: dict, url: str, ts: str):
     """Insert or merge a proxy entry keyed by server/port/secret identity."""
+    url = normalize_to_tg_url(url)
     identity = proxy_identity(url)
     if identity is None:
         return
@@ -231,9 +244,9 @@ def get_existing_proxies() -> list:
                 continue
             if '|' in line:
                 url, ts = line.rsplit('|', 1)
-                result.append((sanitize_proxy_url(url.strip()), ts.strip()))
+                result.append((normalize_to_tg_url(url.strip()), ts.strip()))
             else:
-                result.append((sanitize_proxy_url(line), ''))
+                result.append((normalize_to_tg_url(line), ''))
     result.sort(key=lambda x: (x[1] or '', x[0]))
     return result
 
