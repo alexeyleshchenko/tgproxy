@@ -354,7 +354,7 @@ def write_proxies_atomic(proxies: list):
 
 def git_add_commit_push() -> str:
     """
-    Git add, commit, push.
+    Git pull --ff-only, add, commit, push.
     Returns: 'pushed', 'no_changes', 'failed', or 'push_failed'.
     """
     try:
@@ -365,6 +365,12 @@ def git_add_commit_push() -> str:
             text=True,
             timeout=60,
         )
+
+        # Pull first to avoid "remote has new work" push failures
+        r = sub(['git', 'pull', '--ff-only'])
+        if r.returncode != 0:
+            logger.error(f'git pull --ff-only failed ( Diverged? Manual intervention needed.): {r.stderr}')
+            return 'failed'
 
         r = sub(['git', 'add', 'docs/proxies.txt'])
         if r.returncode != 0:
