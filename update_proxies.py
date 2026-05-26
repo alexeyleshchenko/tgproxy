@@ -8,10 +8,11 @@ import json
 import logging
 import os
 import re
-import subprocess
 import sys
 import tempfile
-from datetime import date, datetime, timezone
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlparse
 
 # === CONFIG ===
@@ -20,7 +21,8 @@ PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
-TG_MCP_CALL = os.environ.get('TG_MCP_CALL', '/usr/local/bin/tg-mcp-call')
+TG_MCP_URL = os.environ.get('TG_MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
+MCP_PROTOCOL_VERSION = '2024-11-05'
 PROXY_PATTERN = re.compile(
     r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
     r'|tg://proxy\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
@@ -62,6 +64,8 @@ except Exception as primary_err:
 
 logger = logging.getLogger(__name__)
 
+_mcp_initialized = False
+
 
 def die(msg):
     """Log error and exit with code 1."""
@@ -69,58 +73,170 @@ def die(msg):
     sys.exit(1)
 
 
+def normalize_bearer(raw: str | None) -> str:
+    """Return token value without Bearer prefix."""
+    if not raw or not str(raw).strip():
+        return ''
+    value = str(raw).strip()
+    if value.lower().startswith('bearer '):
+        return value[7:].strip()
+    return value
+
+
+def get_mcp_bearer() -> str:
+    bearer = normalize_bearer(os.environ.get('TG_MCP_BEARER'))
+    if not bearer:
+        die('TG_MCP_BEARER is required (Telegram MCP Bearer token)')
+    return bearer
+
+
+def parse_sse_response(raw: str) -> dict | None:
+    """Extract the last JSON-RPC object from an SSE or plain JSON body."""
+    last_obj = None
+    for block in raw.split('\n\n'):
+        for line in block.splitlines():
+            if not line.startswith('data: '):
+                continue
+            try:
+                last_obj = json.loads(line[6:])
+            except json.JSONDecodeError:
+                continue
+    if last_obj is not None:
+        return last_obj
+
+    start = raw.find('{')
+    if start == -1:
+        return None
+    try:
+        return json.loads(raw[start:])
+    except json.JSONDecodeError:
+        return None
+
+
+def parse_tool_result_messages(result: dict) -> list | None:
+    """Extract message list from an MCP tools/call result object."""
+    if result.get('isError'):
+        return None
+    if isinstance(result.get('messages'), list):
+        return result['messages']
+
+    messages = []
+    for item in result.get('content', []):
+        if item.get('type') != 'text':
+            continue
+        text = item.get('text', '')
+        if not text:
+            continue
+        try:
+            inner = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+        if isinstance(inner.get('messages'), list):
+            messages.extend(inner['messages'])
+    return messages
+
+
+def _mcp_post(
+    body: dict,
+    bearer: str,
+    timeout: int = 120,
+    session_id: str | None = None,
+) -> tuple[int, str, dict | None]:
+    headers = {
+        'Authorization': f'Bearer {bearer}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/event-stream',
+    }
+    if session_id:
+        headers['Mcp-Session-Id'] = session_id
+
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(TG_MCP_URL, data=data, headers=headers, method='POST')
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode()
+            sid = resp.headers.get('Mcp-Session-Id') or resp.headers.get('mcp-session-id')
+            return resp.status, raw, parse_sse_response(raw), sid
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode() if e.fp else ''
+        return e.code, raw, parse_sse_response(raw), None
+    except urllib.error.URLError as e:
+        logger.error('MCP HTTP request failed: %s', e.reason)
+        return 0, '', None, None
+
+
+def _ensure_mcp_initialized(bearer: str, timeout: int = 120) -> bool:
+    global _mcp_initialized
+    if _mcp_initialized:
+        return True
+
+    status, raw, msg, session_id = _mcp_post(
+        {
+            'jsonrpc': '2.0',
+            'id': 1,
+            'method': 'initialize',
+            'params': {
+                'protocolVersion': MCP_PROTOCOL_VERSION,
+                'capabilities': {},
+                'clientInfo': {'name': 'tgproxy', 'version': '1.0'},
+            },
+        },
+        bearer,
+        timeout=timeout,
+    )
+    if status != 200 or not msg or msg.get('error'):
+        logger.error('MCP initialize failed (HTTP %s): %s', status, raw[:500])
+        return False
+
+    _mcp_post(
+        {'jsonrpc': '2.0', 'method': 'notifications/initialized'},
+        bearer,
+        timeout=timeout,
+        session_id=session_id,
+    )
+    _mcp_initialized = True
+    return True
+
+
 def mcp_call(tool: str, params: dict, timeout: int = 120) -> list | None:
     """
-    Call MCP server via shell command.
+    Call MCP tool via HTTP (Streamable HTTP / SSE).
     Returns message list on success (may be empty), or None on failure.
     """
-    args_json = json.dumps(params)
-    cmd = [TG_MCP_CALL, tool, args_json]
-
-    try:
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        if proc.returncode != 0:
-            logger.error(
-                'tg-mcp-call failed (exit %s): %s',
-                proc.returncode,
-                proc.stderr or proc.stdout,
-            )
-            return None
-
-        output = proc.stdout.strip()
-        if not output:
-            return []
-
-        ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-        output = ansi_escape.sub('', output)
-
-        start = output.find('{')
-        if start == -1:
-            logger.error('MCP output contained no JSON object')
-            return None
-        result = json.loads(output[start:])
-
-        if isinstance(result.get('messages'), list):
-            return result['messages']
-
-        messages = []
-        for item in result.get('content', []):
-            if item.get('type') == 'text':
-                text = item.get('text', '')
-                if text:
-                    inner = json.loads(text)
-                    messages.extend(inner.get('messages', []))
-        return messages
-    except subprocess.TimeoutExpired:
-        die('MCP call timed out')
-    except Exception as e:
-        logger.error(f'MCP call failed: {e}')
+    bearer = get_mcp_bearer()
+    if not _ensure_mcp_initialized(bearer, timeout=timeout):
         return None
+
+    status, raw, msg, _session = _mcp_post(
+        {
+            'jsonrpc': '2.0',
+            'id': 2,
+            'method': 'tools/call',
+            'params': {'name': tool, 'arguments': params},
+        },
+        bearer,
+        timeout=timeout,
+    )
+    if status != 200:
+        logger.error('MCP tools/call failed (HTTP %s)', status)
+        return None
+    if not msg:
+        logger.error('MCP tools/call returned no JSON-RPC payload')
+        return None
+    if msg.get('error'):
+        logger.error('MCP tools/call error: %s', msg['error'])
+        return None
+
+    result = msg.get('result')
+    if not isinstance(result, dict):
+        logger.error('MCP tools/call missing result object')
+        return None
+
+    messages = parse_tool_result_messages(result)
+    if messages is None:
+        logger.error('MCP tools/call result could not be parsed')
+        return None
+    return messages
 
 
 def _to_utc_naive(dt: datetime) -> datetime:
@@ -296,39 +412,6 @@ def proxies_unchanged(combined: list, existing: list) -> bool:
     return sorted(combined, key=lambda x: x[0]) == sorted(existing, key=lambda x: x[0])
 
 
-def read_proxies_file_bytes() -> bytes | None:
-    if not os.path.exists(PROXIES_FILE):
-        return None
-    with open(PROXIES_FILE, 'rb') as f:
-        return f.read()
-
-
-def restore_proxies_file(backup: bytes | None):
-    """Restore proxies.txt from pre-write backup."""
-    if backup is None:
-        if os.path.exists(PROXIES_FILE):
-            os.unlink(PROXIES_FILE)
-        return
-    with open(PROXIES_FILE, 'wb') as f:
-        f.write(backup)
-
-
-def undo_last_commit():
-    """Drop the last local commit; working tree should already match restored file."""
-    subprocess.run(
-        ['git', 'reset', '--mixed', 'HEAD~1'],
-        cwd=REPO_DIR,
-        capture_output=True,
-        timeout=60,
-    )
-    subprocess.run(
-        ['git', 'checkout', '--', 'docs/proxies.txt'],
-        cwd=REPO_DIR,
-        capture_output=True,
-        timeout=60,
-    )
-
-
 def write_proxies_atomic(proxies: list):
     """
     Write proxies to temp file then rename (atomic).
@@ -350,55 +433,6 @@ def write_proxies_atomic(proxies: list):
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
-
-
-def git_add_commit_push() -> str:
-    """
-    Git pull --ff-only, add, commit, push.
-    Returns: 'pushed', 'no_changes', 'failed', or 'push_failed'.
-    """
-    try:
-        sub = lambda cmd: subprocess.run(
-            cmd,
-            cwd=REPO_DIR,
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-
-        # Pull first to avoid "remote has new work" push failures
-        r = sub(['git', 'pull', '--ff-only'])
-        if r.returncode != 0:
-            logger.error(f'git pull --ff-only failed ( Diverged? Manual intervention needed.): {r.stderr}')
-            return 'failed'
-
-        r = sub(['git', 'add', 'docs/proxies.txt'])
-        if r.returncode != 0:
-            logger.error(f'git add failed: {r.stderr}')
-            return 'failed'
-
-        r = sub(['git', 'diff', '--staged', '--quiet'])
-        if r.returncode == 1:
-            commit_msg = (
-                f'Update proxies {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}'
-            )
-            r = sub(['git', 'commit', '-m', commit_msg])
-            if r.returncode != 0:
-                logger.error(f'git commit failed: {r.stderr}')
-                return 'failed'
-
-            r = sub(['git', 'push'])
-            if r.returncode != 0:
-                logger.error(f'git push failed: {r.stderr}')
-                return 'push_failed'
-            return 'pushed'
-        return 'no_changes'
-    except subprocess.TimeoutExpired:
-        logger.error('Git command timed out')
-        return 'failed'
-    except Exception as e:
-        logger.error(f'Git error: {e}')
-        return 'failed'
 
 
 def main():
@@ -432,21 +466,9 @@ def main():
         logger.info('No changes to proxies list.')
         sys.exit(0)
 
-    backup = read_proxies_file_bytes()
     write_proxies_atomic(combined)
-
-    git_result = git_add_commit_push()
-    if git_result == 'pushed':
-        logger.info('Done!')
-        sys.exit(0)
-
-    restore_proxies_file(backup)
-    if git_result == 'push_failed':
-        undo_last_commit()
-        die('proxies.txt reverted: git push failed after local commit')
-    if git_result == 'no_changes':
-        die('proxies.txt reverted: git reported no staged changes after write')
-    die('proxies.txt reverted: git add/commit failed')
+    logger.info('Updated docs/proxies.txt')
+    sys.exit(0)
 
 
 if __name__ == '__main__':

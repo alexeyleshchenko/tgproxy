@@ -2,8 +2,11 @@
 Tests for update_proxies.py
 """
 
+import json
 import os
 import sys
+
+import pytest
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -14,8 +17,11 @@ from update_proxies import (
     extract_proxies,
     get_existing_proxies,
     merge_proxies,
+    normalize_bearer,
     normalize_to_tg_url,
+    parse_sse_response,
     parse_timestamp,
+    parse_tool_result_messages,
     prefer_proxy_url,
     proxies_unchanged,
     proxy_identity,
@@ -364,6 +370,78 @@ class TestGetExistingProxies:
         assert loaded[0][0] == 'tg://proxy?server=b&port=2&secret=y'
         assert loaded[0][1] == ''
         assert loaded[1][0] == 'tg://proxy?server=a&port=1&secret=x'
+
+
+class TestNormalizeBearer:
+    def test_strips_bearer_prefix(self):
+        assert normalize_bearer('Bearer abc123') == 'abc123'
+
+    def test_plain_token(self):
+        assert normalize_bearer('abc123') == 'abc123'
+
+    def test_empty(self):
+        assert normalize_bearer('') == ''
+        assert normalize_bearer(None) == ''
+
+
+class TestParseSseResponse:
+    def test_parses_sse_event(self):
+        raw = (
+            'event: message\r\n'
+            'data: {"jsonrpc":"2.0","id":1,"result":{"ok":true}}\r\n\r\n'
+        )
+        msg = parse_sse_response(raw)
+        assert msg['id'] == 1
+        assert msg['result']['ok'] is True
+
+    def test_parses_plain_json(self):
+        raw = '{"jsonrpc":"2.0","id":2,"result":{}}'
+        assert parse_sse_response(raw)['id'] == 2
+
+
+class TestParseToolResultMessages:
+    def test_top_level_messages(self):
+        result = {'messages': [{'text': 'tg://proxy?server=a&port=1&secret=abc'}]}
+        msgs = parse_tool_result_messages(result)
+        assert len(msgs) == 1
+
+    def test_nested_content_text(self):
+        inner = {'messages': [{'text': 'hello', 'date': '2026-01-01T00:00:00Z'}]}
+        result = {
+            'content': [{'type': 'text', 'text': json.dumps(inner)}],
+            'isError': False,
+        }
+        msgs = parse_tool_result_messages(result)
+        assert len(msgs) == 1
+        assert msgs[0]['text'] == 'hello'
+
+    def test_is_error_returns_none(self):
+        assert parse_tool_result_messages({'isError': True}) is None
+
+    def test_invalid_inner_json_returns_none(self):
+        result = {'content': [{'type': 'text', 'text': 'not-json'}]}
+        assert parse_tool_result_messages(result) is None
+
+
+class TestMcpCall:
+    def test_missing_bearer_exits(self, monkeypatch):
+        import update_proxies as mod
+        monkeypatch.delenv('TG_MCP_BEARER', raising=False)
+        monkeypatch.setattr(mod, 'normalize_bearer', lambda _: '')
+        with pytest.raises(SystemExit) as exc:
+            mod.mcp_call('get_messages', {'chat_id': 'x'})
+        assert exc.value.code == 1
+
+    def test_http_error_returns_none(self, monkeypatch):
+        import update_proxies as mod
+        monkeypatch.setenv('TG_MCP_BEARER', 'test-token')
+        monkeypatch.setattr(mod, '_mcp_initialized', True)
+        monkeypatch.setattr(
+            mod,
+            '_mcp_post',
+            lambda *a, **k: (401, '', {'error': {'code': -1}}, None),
+        )
+        assert mod.mcp_call('get_messages', {'chat_id': 'x'}) is None
 
 
 class TestWriteProxiesAtomic:
