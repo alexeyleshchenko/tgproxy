@@ -5,7 +5,6 @@ tg://proxy?server=media.gotelega.click&port=853&secret=eecd8f55ad4cc566f6ab7faaa
 tg://proxy?server=another.life.mambabot.net&port=4515&secret=eec485b564c0178c338d8bf4f3f17539c4613234382e652e616b616d61692e6e6574|2026-05-24T15:32:55
 tg://proxy?server=dns.vdl.lat&port=853&secret=ee534adcf23a16f425cbae129c4cb574cb6164732e78352e7275|2026-05-24T08:19:46
 tg://proxy?server=media.gotelega.click&port=443&secret=eecd8f55ad4cc566f6ab7faaa6773378e56d656469612e676f74656c6567612e636c69636b|2026-05-24T07:17:00
-tg://proxy?server=fix.baboon.digital&port=8444&secret=ee597752e70b4e240295fcaf7ac006cf78636c6f7564666c6172652e636f6d|2026-05-23T13:16:25
 tg://proxy?server=proxy.nya-aw.sbs&port=9443&secret=ee7fafda4a7dea5a80c8196c944aaeac287777772e636c6f7564666c6172652e636f6d|2026-05-22T14:37:54
 tg://proxy?server=5.180.30.15&port=443&secret=ee34080ab33b40eea022856b7c092aee8d70617472696172636869612e7275|2026-05-21T17:38:42
 tg://proxy?server=hea08mw3apa.sn.mynetname.net&port=8243&secret=ee6311f23d3942893bef1ac4e14225504d706f7274616c2e74756e64756b2e6b67|2026-05-19T09:45:26
@@ -28,3 +27,4 @@ tg://proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc
 tg://proxy?server=prx03.gtgt.ru&port=443&secret=eeffb8ecadb37e893760b73778ed5a4ae97777772e6761727368696e6b612e7275|2026-03-26T22:21:28
 tg://proxy?server=quackton.life&port=443&secret=ee65fc7553a1f5ca8b50b71c015b38722479616e6465782e7275|2026-03-21T21:21:32
 tg://proxy?server=s7.dimasssss.space&port=443&secret=eebe3007e927acd147dde12bee8b1a7c9364726976652e676f6f676c652e636f6d|2026-03-19T17:33:47
+tg://proxy?server=s1.dimasssss.space&port=443&secret=eebe3007e927acd147dde12bee8b1a7c9364726976652e676f6f676c652e636f6d|2026-03-19T17:33:47
