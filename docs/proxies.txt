@@ -1,11 +1,15 @@
+tg://proxy?server=tgmt.st-29.ru&port=443&secret=ee8fc6007490d148f20f93ba5e580fe2a66d6f736d6574726f2e7275|2026-05-28T21:19:39
+tg://proxy?server=82.38.71.181&port=8080&secret=7|2026-05-28T20:57:39
+tg://proxy?server=serv5.link-in.cc&port=443&secret=ee8002d8c7a7f8779817c00ca932e1a3a4636c6f75642e63646e2e79616e6465782e636f6d|2026-05-28T19:25:56
+tg://proxy?server=serv2.link-in.cc&port=443&secret=ee8002d8c7a7f8779817c00ca932e1a3a4636c6f75642e63646e2e79616e6465782e636f6d|2026-05-28T19:25:56
+tg://proxy?server=media.gotelega.click&port=853&secret=eecd8f55ad4cc566f6ab7faaa6773378e56d656469612e676f74656c6567612e636c69636b|2026-05-28T10:06:53
+tg://proxy?server=media.gotelega.click&port=443&secret=eecd8f55ad4cc566f6ab7faaa6773378e56d656469612e676f74656c6567612e636c69636b|2026-05-28T10:06:53
 tg://proxy?server=dot.vdl.lat&port=853&secret=ee9963ec50cf89d852bb1e084a44b196e4646f742e76646c2e6c6174|2026-05-27T23:05:30
 tg://proxy?server=dns.vdl.lat&port=853&secret=ee534adcf23a16f425cbae129c4cb574cb6164732e78352e7275|2026-05-27T23:05:30
 tg://proxy?server=serv2.link-in.cc&port=443&secret=ee046522f2b611ffadeae1994d740c589b79616e6465782e636f6d|2026-05-26T15:45:25
 tg://proxy?server=serv1.link-in.cc&port=443&secret=ee046522f2b611ffadeae1994d740c589b79616e6465782e636f6d|2026-05-26T15:45:25
 tg://proxy?server=cdn0-38.cdn-vkvideo.com&port=443&secret=ee470cb2b8b29aeadfbdf8a2f7bee5ca3b63646e302d33382e63646e2d766b766964656f2e636f6d|2026-05-26T12:05:45
-tg://proxy?server=media.gotelega.click&port=853&secret=eecd8f55ad4cc566f6ab7faaa6773378e56d656469612e676f74656c6567612e636c69636b|2026-05-26T07:13:20
 tg://proxy?server=another.life.mambabot.net&port=4515&secret=eec485b564c0178c338d8bf4f3f17539c4613234382e652e616b616d61692e6e6574|2026-05-24T15:32:55
-tg://proxy?server=media.gotelega.click&port=443&secret=eecd8f55ad4cc566f6ab7faaa6773378e56d656469612e676f74656c6567612e636c69636b|2026-05-24T07:17:00
 tg://proxy?server=proxy.nya-aw.sbs&port=9443&secret=ee7fafda4a7dea5a80c8196c944aaeac287777772e636c6f7564666c6172652e636f6d|2026-05-22T14:37:54
 tg://proxy?server=5.180.30.15&port=443&secret=ee34080ab33b40eea022856b7c092aee8d70617472696172636869612e7275|2026-05-21T17:38:42
 tg://proxy?server=hea08mw3apa.sn.mynetname.net&port=8243&secret=ee6311f23d3942893bef1ac4e14225504d706f7274616c2e74756e64756b2e6b67|2026-05-19T09:45:26
@@ -24,7 +28,3 @@ tg://proxy?server=raw.cloud.klukva.online&port=443&secret=ee9ed9c1fc8539146787b1
 tg://proxy?server=two.turboproxy.pro&port=8443&secret=eec8150abdb60a541343858be088e857f66669727374627974652e7275|2026-04-26T16:55:54
 tg://proxy?server=one.turboproxy.pro&port=443&secret=ee74e2e117f2160c55370f68df7381d5d361657a612e7275|2026-04-26T16:55:54
 tg://proxy?server=santehnik-na-vse-ryki.mooo.com&port=443&secret=eeb9c3e11bde361ca1e3a6ba9769cf3b7173616e7465686e696b2d6e612d7673652d72796b692e6d6f6f6f2e636f6d|2026-04-26T16:33:37
-tg://proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc362726f7773696e672e79616e6465782e636f6d|2026-03-27T15:14:50
-tg://proxy?server=prx03.gtgt.ru&port=443&secret=eeffb8ecadb37e893760b73778ed5a4ae97777772e6761727368696e6b612e7275|2026-03-26T22:21:28
-tg://proxy?server=quackton.life&port=443&secret=ee65fc7553a1f5ca8b50b71c015b38722479616e6465782e7275|2026-03-21T21:21:32
-tg://proxy?server=s7.dimasssss.space&port=443&secret=eebe3007e927acd147dde12bee8b1a7c9364726976652e676f6f676c652e636f6d|2026-03-19T17:33:47
