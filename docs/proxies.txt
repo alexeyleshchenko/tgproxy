@@ -1,7 +1,9 @@
+tg://proxy?server=tgmt.st-29.ru&port=443&secret=ee8fc6007490d148f20f93ba5e580fe2a66d6f736d6574726f2e7275|2026-06-05T13:21:11
+tg://proxy?server=tgmt.st-29.online&port=443&secret=ee2258b5fc20d87c0534e25f1f860a729f6c656e74612e7275|2026-06-05T13:21:11
+tg://proxy?server=connect.mtp.llc&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-05T07:35:59
 tg://proxy?server=swepantg.fchb.net&port=443&secret=eee1e0031b30189f6b5052707d21e5ae13676f6f676c65617069732e636f6d|2026-06-04T15:08:59
 tg://proxy?server=paneltg.fchb.net&port=443&secret=ee310ef18989db8757fbcc7690d797f7f9326769732e7275|2026-06-04T15:08:59
 tg://proxy?server=5.223.75.221&port=443&secret=ee5969388790759916e6772e03cbc00f60706574726f766963682e7275|2026-06-02T11:37:07
-tg://proxy?server=tg3.rebirthconnect.com&port=443&secret=eefa363bb56fadd55d91a88924745ae54e7467332e72656269727468636f6e6e6563742e636f6d|2026-06-01T08:20:07
 tg://proxy?server=fi.neoqvant.ru&port=443&secret=ee84faf238461ff4ca88c17f358b1fefba66692e6e656f7176616e742e7275|2026-05-31T08:36:50
 tg://proxy?server=tgnl.klymra.online&port=443&secret=eefa19e6d66e3ca28f362a419602c7b02d7777772e636c6f7564666c6172652e636f6d|2026-05-30T11:37:06
 tg://proxy?server=c.rkn.dog&port=44443&secret=eecd8f55ad4cc566f6ab7faaa6773378e5726b6e2e646f67|2026-05-30T01:33:21
@@ -26,5 +28,3 @@ tg://proxy?server=85.17.89.193&port=443&secret=ee76f6583e6b509d946c56287a9ca59dc
 tg://proxy?server=prx03.gtgt.ru&port=443&secret=eeffb8ecadb37e893760b73778ed5a4ae97777772e6761727368696e6b612e7275|2026-03-26T22:21:28
 tg://proxy?server=quackton.life&port=443&secret=ee65fc7553a1f5ca8b50b71c015b38722479616e6465782e7275|2026-03-21T21:21:32
 tg://proxy?server=s7.dimasssss.space&port=443&secret=eebe3007e927acd147dde12bee8b1a7c9364726976652e676f6f676c652e636f6d|2026-03-19T17:33:47
-tg://proxy?server=s1.dimasssss.space&port=443&secret=eebe3007e927acd147dde12bee8b1a7c9364726976652e676f6f676c652e636f6d|2026-03-19T17:33:47
-tg://proxy?server=s09.dimasssss.space&port=443&secret=eebed92191281b6d7a676b052f2797cad9646e732d73686f702e7275|2026-03-19T17:33:47
