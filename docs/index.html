@@ -226,6 +226,37 @@
             background: var(--tg-success);
         }
 
+        .ping-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 64px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            line-height: 1;
+            flex-shrink: 0;
+            text-align: center;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .ping-chip.pending {
+            background: #f5a623;
+            color: #1a1a1a;
+        }
+
+        .ping-chip.ok {
+            background: var(--tg-success);
+            color: #fff;
+        }
+
+        .ping-chip.timeout {
+            background: #e53935;
+            color: #fff;
+        }
+
         .state {
             text-align: center;
             color: var(--tg-hint);
@@ -426,9 +457,17 @@
                         btn.dataset.url = p.url;
                         btn.textContent = 'Copy';
 
+                        const chip = document.createElement('span');
+                        chip.className = 'ping-chip pending';
+                        chip.textContent = '...';
+                        chip.setAttribute('aria-label', 'TLS handshake status');
+
                         item.appendChild(link);
+                        item.appendChild(chip);
                         item.appendChild(btn);
                         container.appendChild(item);
+
+                        startPingChip(chip, p.url);
                     }
                 }
             } catch (err) {
@@ -462,6 +501,68 @@
                 }, 1500);
             });
         });
+
+        function parseProxyEndpoint(tgUrl) {
+            const serverMatch = tgUrl.match(/[?&]server=([^&]+)/);
+            const portMatch = tgUrl.match(/[?&]port=(\d+)/);
+            if (!serverMatch || !portMatch) return null;
+            return { server: decodeURIComponent(serverMatch[1]), port: portMatch[1] };
+        }
+
+        async function pingProxy(server, port) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 10000);
+            const start = performance.now();
+            try {
+                await fetch('https://' + server + ':' + port + '/', {
+                    mode: 'no-cors',
+                    signal: controller.signal,
+                    cache: 'no-store'
+                });
+                clearTimeout(timer);
+                return { ok: true, ms: Math.round(performance.now() - start) };
+            } catch (e) {
+                clearTimeout(timer);
+                const ms = Math.round(performance.now() - start);
+                if (e.name === 'AbortError') {
+                    return { ok: false, timeout: true, ms: ms };
+                }
+                // Network/TLS error — if it failed fast, TLS at least started
+                // If it failed near 10s, it's effectively a timeout
+                if (ms > 9000) {
+                    return { ok: false, timeout: true, ms: ms };
+                }
+                return { ok: false, timeout: false, ms: ms };
+            }
+        }
+
+        function startPingChip(chip, tgUrl) {
+            const ep = parseProxyEndpoint(tgUrl);
+            if (!ep) {
+                chip.className = 'ping-chip timeout';
+                chip.textContent = 'N/A';
+                return;
+            }
+
+            async function doPing() {
+                chip.className = 'ping-chip pending';
+                chip.textContent = '...';
+                const result = await pingProxy(ep.server, ep.port);
+                if (result.ok) {
+                    chip.className = 'ping-chip ok';
+                    chip.textContent = result.ms + 'ms';
+                } else if (result.timeout) {
+                    chip.className = 'ping-chip timeout';
+                    chip.textContent = 'T/O';
+                } else {
+                    chip.className = 'ping-chip timeout';
+                    chip.textContent = 'ERR';
+                }
+            }
+
+            doPing();
+            setInterval(doPing, 10000);
+        }
 
         loadProxies();
     </script>
