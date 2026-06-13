@@ -1,4 +1,14 @@
-tg://proxy?server=ngenix.org&port=443&secret=ee470cb2b8b29aeadfbdf8a2f7bee5ca3b6e67656e69782e6f7267|2026-06-12T06:29:49
+tg://proxy?server=max.ru.rightarion.ru&port=443&secret=eec1e84a7f2d9b3056eaf17c4d8b62f9036d61782e7275|2026-06-13T02:14:42
+tg://proxy?server=max.ru.rightarion.ru&port=443&secret=ddc1e84a7f2d9b3056eaf17c4d8b62f903|2026-06-13T02:14:42
+tg://proxy?server=109.71.252.60&port=443&secret=ee83519236f450f71d3635c97cc91da1f070617472696172636869612e7275|2026-06-12T23:09:09
+tg://proxy?server=polyxvpnproxy.d-n-s.name&port=443&secret=eeb611c4a66d9dcc85465c781aec33ed6379616e6465782e7275|2026-06-12T21:37:37
+tg://proxy?server=proxy-nl.littleusername.ru&port=1536&secret=ee5d992515db0d46e76aa7a7947a26235d77696c64626572726965732e7275|2026-06-12T17:26:12
+tg://proxy?server=bk.mtprotoproxy.app&port=443&secret=ee081953cfd4fc7cfb374bef24b28daa3d626b2e6d7470726f746f70726f78792e617070|2026-06-12T17:14:59
+tg://proxy?server=login.willdomarket.com&port=443&secret=eeade38833e5bb815a530e394895b634e46c6f67696e2e77696c6c646f6d61726b65742e636f6d|2026-06-12T12:51:05
+tg://proxy?server=coffeex.liketg.org&port=443&secret=ee0dbf98440246f4b9228dd2b704256cad70696b2e7275|2026-06-12T12:17:29
+tg://proxy?server=dataapi.toconline.ch&port=443&secret=eea1d26cab0f3beaf7a70edcca4612458b646174616170692e746f636f6e6c696e652e6368|2026-06-12T08:59:32
+tg://proxy?server=ngenix.org&port=443&secret=ee470cb2b8b29aeadfbdf8a2f7bee5ca3b6e67656e69782e6f7267|2026-06-12T08:42:34
+tg://proxy?server=109.120.191.156&port=8443&secret=b1fd4085c0b43c04e7fcde6c44fa0096|2026-06-12T08:21:31
 tg://proxy?server=p2.cryptokazancev.ru&port=443&secret=eec3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f879612e7275|2026-06-11T20:18:04
 tg://proxy?server=222.167.246.62&port=1443&secret=dd00000000000000000000000000000000|2026-06-11T20:02:47
 tg://proxy?server=81.90.17.230&port=8530&secret=eed9d1fceb145ca35d0b9a07bd662e57df7777772e6f6e65742e706c|2026-06-11T18:07:41
@@ -8,7 +18,6 @@ tg://proxy?server=150.241.87.133&port=443&secret=eede6da431f5f662fee1739f7a69fe3
 tg://proxy?server=pub.rkn.dog&port=443&secret=eecd8f55ad4cc566f6ab7faaa6773378e57075622e726b6e2e646f67|2026-06-11T10:19:13
 tg://proxy?server=proxy.original.qzz.io&port=23235&secret=ee82965bf557a59d410459be83fe7294df6769746875622e636f6d|2026-06-11T08:39:31
 tg://proxy?server=cdn.mtproxy.pw&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-10T22:31:14
-tg://proxy?server=tg.2yndra.ru&port=8443&secret=ee8383b8ae632de923e9261f5814cabcdf7777772e7362657262616e6b2e7275|2026-06-10T21:52:17
 tg://proxy?server=p1.cryptokazancev.ru&port=443&secret=eec3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f879612e7275|2026-06-10T19:45:09
 tg://proxy?server=85.155.98.59&port=443&secret=ee7127676da72a63fdb2fcf1dac8dc7e3b666c65782e7275|2026-06-10T15:38:39
 tg://proxy?server=2.59.132.116&port=443&secret=dd0cded366f8fe0040460bb770df894512|2026-06-10T15:09:26
@@ -19,12 +28,3 @@ tg://proxy?server=2.26.3.116&port=4433&secret=eeba2bd68efa797efb0bd078bb38e62ac3
 tg://proxy?server=yandex.endpro.tech&port=443&secret=eeeb28d5487237e3ba0e9c5ccce794af9f79612e7275|2026-06-10T05:49:59
 tg://proxy?server=178.249.68.54&port=8888&secret=eef4debdfd6765ada4203139e0858c95c8766b74732e7275|2026-06-09T18:23:22
 tg://proxy?server=new3.cryptokazancev.ru&port=443&secret=ee135d9847a9bbd6c8cded4f7495958ff07777772e636c6f7564666c6172652e636f6d|2026-06-09T13:44:43
-tg://proxy?server=new1.cryptokazancev.ru&port=443&secret=ee135d9847a9bbd6c8cded4f7495958ff07777772e636c6f7564666c6172652e636f6d|2026-06-09T13:44:43
-tg://proxy?server=n2.cryptokazancev.ru&port=443&secret=ee258270c24ef93f86eba77326e460430a7777772e636c6f7564666c6172652e636f6d|2026-06-09T13:44:43
-tg://proxy?server=n1.cryptokazancev.ru&port=444&secret=eec3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8706574726f766963682e7275|2026-06-09T13:44:43
-tg://proxy?server=78.17.54.178&port=443&secret=ee8edfcf2aa3c2d1b82ac5e10718e09fe47777772e636c6f7564666c6172652e636f6d|2026-06-09T12:31:09
-tg://proxy?server=222.167.246.62&port=1443&secret=ee2586246f35eda89fff490cdac1296f09686f66662e7275|2026-06-09T06:55:18
-tg://proxy?server=31.77.158.192&port=7443&secret=eeb1217451120f06fc56f7303a6a6997267275747562652e7275|2026-06-09T04:36:01
-tg://proxy?server=free2.mtprotoproxy.app&port=443&secret=ee0cded366f8fe0040460bb770df8945126865726f6573776d2e7275|2026-06-08T21:31:12
-tg://proxy?server=free1.mtprotoproxy.app&port=443&secret=ee0cded366f8fe0040460bb770df8945126865726f6573776d2e7275|2026-06-08T21:31:12
-tg://proxy?server=max.ru.rightarion.ru&port=443&secret=eec1e84a7f2d9b3056eaf17c4d8b62f9036d61782e7275|2026-06-08T13:43:34
