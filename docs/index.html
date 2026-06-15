@@ -511,7 +511,7 @@
 
         async function pingProxy(server, port) {
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 10000);
+            const timer = setTimeout(() => controller.abort(), 5000);
             const start = performance.now();
             try {
                 await fetch('https://' + server + ':' + port + '/', {
@@ -527,12 +527,13 @@
                 if (e.name === 'AbortError') {
                     return { ok: false, timeout: true, ms: ms };
                 }
-                // Network/TLS error — if it failed fast, TLS at least started
-                // If it failed near 10s, it's effectively a timeout
-                if (ms > 9000) {
+                // Fast error = server responded (TLS cert error, connection reset, etc.)
+                // This means the proxy is alive — it's just not an HTTPS web server.
+                // Slow error near the abort threshold = effectively a timeout.
+                if (ms > 4500) {
                     return { ok: false, timeout: true, ms: ms };
                 }
-                return { ok: false, timeout: false, ms: ms };
+                return { ok: true, ms: ms };
             }
         }
 
@@ -551,12 +552,9 @@
                 if (result.ok) {
                     chip.className = 'ping-chip ok';
                     chip.textContent = result.ms + 'ms';
-                } else if (result.timeout) {
-                    chip.className = 'ping-chip timeout';
-                    chip.textContent = 'T/O';
                 } else {
                     chip.className = 'ping-chip timeout';
-                    chip.textContent = 'ERR';
+                    chip.textContent = 'T/O';
                 }
             }
 
