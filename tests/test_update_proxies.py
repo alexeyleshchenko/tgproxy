@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from update_proxies import (
     PROXY_PATTERN,
     TS_FORMAT,
+    _prefer_candidate,
     extract_proxies,
     get_existing_proxies,
     merge_proxies,
@@ -22,9 +23,10 @@ from update_proxies import (
     parse_sse_response,
     parse_timestamp,
     parse_tool_result_messages,
-    prefer_proxy_url,
     proxies_unchanged,
     proxy_identity,
+    proxy_secret,
+    proxy_type,
     sanitize_proxy_url,
     write_proxies_atomic,
 )
@@ -211,16 +213,59 @@ class TestProxyIdentity:
         https = f'https://t.me/proxy?server=ru.vip.mambabot.net&port=443&secret={self.SECRET}'
         assert proxy_identity(tg) == proxy_identity(https)
 
-    def test_different_secrets_not_equal(self):
+    def test_same_server_port_different_secret_is_equal(self):
+        """Secret rotation is still the same endpoint -> identities match."""
         a = 'tg://proxy?server=example.com&port=443&secret=abc'
         b = 'tg://proxy?server=example.com&port=443&secret=def'
+        assert proxy_identity(a) == proxy_identity(b)
+
+    def test_different_types_same_endpoint_not_equal(self):
+        """HIGH #2: distinct proxy types on one host:port stay separate."""
+        proxy = 'tg://proxy?server=example.com&port=443&secret=aaaa1111'
+        socks = 'tg://socks?server=example.com&port=443&secret=aaaa1111'
+        killer = 'tg://killer?server=example.com&port=443&secret=aaaa1111'
+        assert proxy_identity(proxy) != proxy_identity(socks)
+        assert proxy_identity(proxy) != proxy_identity(killer)
+        assert proxy_identity(socks) != proxy_identity(killer)
+
+    def test_proxy_type_keyword(self):
+        assert proxy_type('tg://proxy?server=x&port=1&secret=aa') == 'proxy'
+        assert proxy_type('tg://socks?server=x&port=1&secret=aa') == 'socks'
+        assert proxy_type('https://t.me/killer?server=x&port=1&secret=aa') == 'killer'
+        assert proxy_type('not-a-proxy') == ''
+
+    def test_different_port_not_equal(self):
+        a = 'tg://proxy?server=example.com&port=443&secret=abc'
+        b = 'tg://proxy?server=example.com&port=8443&secret=abc'
         assert proxy_identity(a) != proxy_identity(b)
 
-    def test_prefer_tg_over_https(self):
-        tg = 'tg://proxy?server=example.com&port=443&secret=abc'
-        https = 'https://t.me/proxy?server=example.com&port=443&secret=abc'
-        assert prefer_proxy_url(https, tg) == tg
-        assert prefer_proxy_url(tg, https) == tg
+    def test_proxy_secret_extracted(self):
+        url = 'tg://proxy?server=example.com&port=443&secret=ABCdef'
+        assert proxy_secret(url) == 'abcdef'
+        assert proxy_secret('not-a-proxy') == ''
+
+
+class TestPreferCandidate:
+    def test_newer_timestamp_wins(self):
+        prev = 'tg://proxy?server=x&port=1&secret=aaaa1111'
+        cand = 'tg://proxy?server=x&port=1&secret=bbbb2222'
+        assert _prefer_candidate(prev, '2026-01-01T00:00:00',
+                                 cand, '2026-06-01T00:00:00') is True
+        assert _prefer_candidate(cand, '2026-06-01T00:00:00',
+                                 prev, '2026-01-01T00:00:00') is False
+
+    def test_equal_ts_longer_secret_wins(self):
+        short = 'tg://proxy?server=x&port=1&secret=aaaa1111'
+        long = 'tg://proxy?server=x&port=1&secret=aaaa11112222333344445555'
+        ts = '2026-06-01T00:00:00'
+        assert _prefer_candidate(short, ts, long, ts) is True
+        assert _prefer_candidate(long, ts, short, ts) is False
+
+    def test_empty_ts_treated_as_oldest(self):
+        prev = 'tg://proxy?server=x&port=1&secret=aaaa1111'
+        cand = 'tg://proxy?server=x&port=1&secret=bbbb2222'
+        assert _prefer_candidate(prev, '', cand, '2026-06-01T00:00:00') is True
+        assert _prefer_candidate(prev, '2026-06-01T00:00:00', cand, '') is False
 
 
 class TestExtractProxies:
@@ -253,7 +298,7 @@ class TestExtractProxies:
         found = extract_proxies(messages)
         assert len(found) == 1
         assert found[0][0] == tg
-        assert found[0][1] == '2026-05-15T21:37:22'
+        assert found[0][1] == '2026-05-18T17:55:54'
 
     def test_strips_markdown_from_message_text(self):
         secret = 'eebed92191281b6d7a676b052f2797cad9726164696f7265636f72642e7275'
@@ -279,6 +324,63 @@ class TestExtractProxies:
         found = extract_proxies(messages)
         assert len(found) == 1
         assert found[0][0] == clean
+
+    def test_rotated_secret_keeps_most_recent(self):
+        """Same server/port, different secret: the newer publication wins."""
+        old = 'tg://proxy?server=rot.example.com&port=443&secret=aaaa1111'
+        new = 'tg://proxy?server=rot.example.com&port=443&secret=bbbb2222'
+        messages = [
+            {'text': old, 'date': '2026-06-01T10:00:00Z'},
+            {'text': new, 'date': '2026-06-20T10:00:00Z'},
+        ]
+        found = extract_proxies(messages)
+        assert len(found) == 1
+        assert found[0][0] == new
+        assert found[0][1] == '2026-06-20T10:00:00'
+
+    def test_rotated_secret_order_independent(self):
+        """Newest wins even when encountered first."""
+        old = 'tg://proxy?server=rot.example.com&port=443&secret=aaaa1111'
+        new = 'tg://proxy?server=rot.example.com&port=443&secret=bbbb2222'
+        messages = [
+            {'text': new, 'date': '2026-06-20T10:00:00Z'},
+            {'text': old, 'date': '2026-06-01T10:00:00Z'},
+        ]
+        found = extract_proxies(messages)
+        assert len(found) == 1
+        assert found[0][0] == new
+
+    def test_same_timestamp_keeps_fuller_secret(self):
+        """Equal timestamps (two links in one message): longer secret wins."""
+        full = (
+            'tg://proxy?server=max.ru.rightarion.ru&port=443&secret='
+            'eec1e84a7f2d9b3056eaf17c4d8b62f9036d61782e7275'
+        )
+        short = 'tg://proxy?server=max.ru.rightarion.ru&port=443&secret=ddc1e84a7f2d9b3056eaf17c4d8b62f903'
+        # short listed first on purpose: fuller must still win
+        messages = [
+            {'text': f'{short} {full}', 'date': '2026-06-27T10:09:48Z'},
+        ]
+        found = extract_proxies(messages)
+        assert len(found) == 1
+        assert found[0][0] == full
+
+    def test_extracts_tg_socks_and_killer_links(self):
+        """HIGH #1: the tg:// branch must match socks/killer, not just proxy."""
+        socks = 'tg://socks?server=socks.example.com&port=1080&secret=aa11bb22'
+        killer = 'tg://killer?server=killer.example.com&port=443&secret=cc33dd44'
+        messages = [{'text': f'{socks}\n{killer}', 'date': '2026-06-27T10:09:48Z'}]
+        found = extract_proxies(messages)
+        servers = {proxy_identity(u)[0] for u, _ in found}
+        assert servers == {'socks.example.com', 'killer.example.com'}
+
+    def test_keeps_distinct_types_on_same_endpoint(self):
+        """HIGH #2: same host:port but different type are distinct proxies."""
+        proxy = 'tg://proxy?server=example.com&port=443&secret=aaaa1111'
+        socks = 'tg://socks?server=example.com&port=443&secret=bbbb2222'
+        messages = [{'text': f'{proxy}\n{socks}', 'date': '2026-06-27T10:09:48Z'}]
+        found = extract_proxies(messages)
+        assert len(found) == 2
 
 
 class TestProxyMerge:
@@ -318,6 +420,14 @@ class TestProxyMerge:
         merged = merge_proxies([https], [tg])
         assert len(merged) == 1
         assert merged[0][0] == tg[0]
+
+    def test_merge_collapses_rotated_secret_across_lists(self):
+        """A rotated secret in the new fetch replaces the stored endpoint."""
+        stored = ('tg://proxy?server=rot.example.com&port=443&secret=aaaa1111', '2026-06-01T10:00:00')
+        fresh = ('tg://proxy?server=rot.example.com&port=443&secret=bbbb2222', '2026-06-20T10:00:00')
+        merged = merge_proxies([fresh], [stored])
+        assert len(merged) == 1
+        assert merged[0] == fresh
 
     def test_caps_when_new_exceeds_max_size(self):
         new_proxies = make_proxies("new", 47, start_day=0)

@@ -25,8 +25,11 @@ TG_MCP_URL = os.environ.get('TG_MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
 MCP_PROTOCOL_VERSION = '2024-11-05'
 PROXY_PATTERN = re.compile(
     r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
-    r'|tg://proxy\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
+    r'|tg://(?:socks|proxy|killer)\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
 )
+
+# Captures the proxy type keyword (socks/proxy/killer) from either URL scheme.
+_TYPE_PATTERN = re.compile(r'(?:tg://|https://t\.me/)(socks|proxy|killer)\?')
 TS_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 root_logger = logging.getLogger()
@@ -285,8 +288,21 @@ def normalize_to_tg_url(url: str) -> str:
     return clean
 
 
+def proxy_type(url: str) -> str:
+    """Return the proxy type keyword (socks/proxy/killer), or '' if absent."""
+    m = _TYPE_PATTERN.search(url)
+    return m.group(1) if m else ''
+
+
 def proxy_identity(url: str) -> tuple[str, str, str] | None:
-    """Return (server, port, secret) identity for deduplication, or None."""
+    """Return (server, port, type) identity for deduplication, or None.
+
+    The secret is intentionally NOT part of the identity: the same endpoint
+    republished with a rotated secret is still the same proxy, so entries that
+    share server, port and type collapse to one (see _prefer_candidate for which
+    wins). The type IS part of the identity so distinct proxy kinds (MTProto vs
+    SOCKS vs killer) sharing a host:port are kept as separate entries.
+    """
     match = PROXY_PATTERN.search(url)
     if not match:
         return None
@@ -294,30 +310,56 @@ def proxy_identity(url: str) -> tuple[str, str, str] | None:
     try:
         server = params['server'][0]
         port = params['port'][0]
-        secret = params['secret'][0]
     except (KeyError, IndexError):
         return None
-    return (server.lower(), port, secret.lower())
+    return (server.lower(), port, proxy_type(match.group(0)))
 
 
-def prefer_proxy_url(current: str, candidate: str) -> str:
-    """Pick the stored URL when two links refer to the same proxy."""
-    def rank(u: str) -> int:
-        if u.startswith('tg://proxy'):
-            return 0
-        if u.startswith('https://t.me/proxy'):
-            return 1
-        if u.startswith('https://t.me/socks'):
-            return 2
-        if u.startswith('https://t.me/killer'):
-            return 3
-        return 4
+def proxy_secret(url: str) -> str:
+    """Return the lowercased secret from a proxy URL, or '' if absent."""
+    match = PROXY_PATTERN.search(url)
+    if not match:
+        return ''
+    params = parse_qs(urlparse(match.group(0)).query)
+    return params.get('secret', [''])[0].lower()
 
-    return candidate if rank(candidate) < rank(current) else current
+
+def _url_rank(u: str) -> int:
+    """Lower is preferred. tg:// proxy links beat https t.me variants."""
+    if u.startswith('tg://proxy'):
+        return 0
+    if u.startswith('https://t.me/proxy'):
+        return 1
+    if u.startswith('https://t.me/socks'):
+        return 2
+    if u.startswith('https://t.me/killer'):
+        return 3
+    return 4
+
+
+def _prefer_candidate(prev_url: str, prev_ts: str, cand_url: str, cand_ts: str) -> bool:
+    """Decide whether a candidate entry replaces the stored one for an endpoint.
+
+    Both entries share the same (server, port). The most recent publication wins;
+    on equal/missing timestamps the more complete (longer) secret wins, then the
+    preferred URL form. Collapses secret-rotated duplicates to the freshest,
+    fullest entry regardless of the order entries are seen in.
+    """
+    prev_key, cand_key = prev_ts or '', cand_ts or ''
+    if prev_key != cand_key:
+        return cand_key > prev_key
+    prev_len, cand_len = len(proxy_secret(prev_url)), len(proxy_secret(cand_url))
+    if prev_len != cand_len:
+        return cand_len > prev_len
+    return _url_rank(cand_url) < _url_rank(prev_url)
 
 
 def _store_proxy(found: dict, url: str, ts: str):
-    """Insert or merge a proxy entry keyed by server/port/secret identity."""
+    """Insert or merge a proxy entry keyed by (server, port, type) identity.
+
+    When an entry for the same server/port/type already exists (e.g. the secret
+    was rotated), keep the more recent / more complete one via _prefer_candidate.
+    """
     url = normalize_to_tg_url(url)
     identity = proxy_identity(url)
     if identity is None:
@@ -326,8 +368,8 @@ def _store_proxy(found: dict, url: str, ts: str):
         found[identity] = (url, ts)
         return
     prev_url, prev_ts = found[identity]
-    merged_ts = prev_ts if prev_ts or not ts else ts
-    found[identity] = (prefer_proxy_url(prev_url, url), merged_ts)
+    if _prefer_candidate(prev_url, prev_ts, url, ts):
+        found[identity] = (url, ts)
 
 
 def extract_proxies(messages: list) -> list:
@@ -371,8 +413,9 @@ def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES
     """
     Merge new and existing proxies, keeping at most max_size total.
 
-    New proxies are preferred over existing ones. Remaining slots are filled from
-    existing entries not already present, preferring the newest by timestamp.
+    Proxies are keyed by (server, port); when the same endpoint appears in both
+    lists (e.g. a rotated secret), the more recent / fuller entry wins. Remaining
+    slots are filled from existing entries not already present, newest first.
     The result is capped at max_size; when over capacity, the oldest entries
     are dropped.
 
@@ -388,9 +431,9 @@ def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES
         if identity is None:
             continue
         if identity in found:
-            prev_url, prev_ts = found[identity]
-            merged_ts = prev_ts if prev_ts or not ts else ts
-            found[identity] = (prefer_proxy_url(prev_url, url), merged_ts)
+            # Same endpoint already kept from the new fetch; merge so a newer or
+            # fuller existing entry can still win (rotated-secret dedup).
+            _store_proxy(found, url, ts)
             continue
         _store_proxy(existing_extra, url, ts)
 

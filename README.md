@@ -1,15 +1,15 @@
 # tgproxy
 
-Auto-updated Telegram proxy list published at **tgproxy.l1979.ru**
+Telegram proxy list published at **tgproxy.l1979.ru** (self-hosted on itg-1 via Caddy — see [Hosting](#hosting))
 
 Proxy URLs are collected from the [@telemtrs](https://t.me/telemtrs) channel's "Free proxy" forum topic and published daily.
 
 ## How It Works
 
-1. **Collection** — GitHub Actions runs [`update_proxies.py`](update_proxies.py) nightly; it calls [tg-mcp.l1979.ru](https://tg-mcp.l1979.ru) via HTTP MCP (`get_messages` on topic 16160).
+1. **Collection** — [`update_proxies.py`](update_proxies.py) runs on **itg-1** via a server-side cron (`0 3 * * * /opt/tgproxy/scripts/update.sh`); the GitHub Actions nightly is inert (see [Hosting](#hosting)). It calls [tg-mcp.l1979.ru](https://tg-mcp.l1979.ru) via HTTP MCP (`get_messages` on topic 16160).
 2. **Processing** — Extract proxy URLs (`tg://proxy?...`, `https://t.me/proxy?...`, socks, killer).
 3. **Merge** — Deduplicate, prefer new URLs from Telegram, keep up to 30 newest entries.
-4. **Publishing** — The workflow commits `docs/proxies.txt` to `main` and deploys GitHub Pages inline (tgproxy.l1979.ru).
+4. **Publishing** — on **itg-1**, `update_proxies.py` regenerates `docs/proxies.txt` in place at `/opt/tgproxy/docs`, which the `static-sites` Caddy serves at tgproxy.l1979.ru. (No GitHub Pages — the account is shadowed.)
 
 ## Repository Structure
 
@@ -70,19 +70,20 @@ python3 update_proxies.py
 
 The script updates `docs/proxies.txt` only; commit and push manually if needed.
 
-## CI/CD
+## Hosting
 
-| Workflow | Trigger | Role |
-|----------|---------|------|
-| [`nightly-update.yml`](.github/workflows/nightly-update.yml) | Cron `0 3 * * *` UTC (~06:00 Moscow), `workflow_dispatch` | Update proxies, commit, inline Pages deploy |
-| [`pages.yml`](.github/workflows/pages.yml) | Push/PR to `main` | Tests; deploy on normal pushes |
+> ⚠️ **Self-hosted, not GitHub Pages.** The `leshchenko1979` GitHub account is **shadowed** — GitHub Actions and GitHub Pages are turned off. The `.github/workflows/*.yml` files are kept for reference but **do not run**.
 
-- **Hosting**: GitHub Pages — https://leshchenko1979.github.io/tgproxy/
-- **Domain**: tgproxy.l1979.ru (CNAME configured)
+- **Live site**: https://tgproxy.l1979.ru (+ mirror `tgproxy-mirror.l1979.ru`) — served by the **`static-sites` Caddy container on itg-1** (`144.31.188.163`) from `/opt/tgproxy/docs` (mounted into Caddy at `/data/tgproxy`).
+- **Update flow (automated, server-side)**: a cron on itg-1 runs `0 3 * * * /opt/tgproxy/scripts/update.sh`, which runs `update_proxies.py` (needs `TG_MCP_BEARER` from `/opt/tgproxy/.env`) and regenerates `docs/proxies.txt` in place; Caddy serves the updated file. To refresh by hand: `ssh itg-1` then run `/opt/tgproxy/scripts/update.sh`.
+- **GitHub Actions is NOT the update mechanism** — the nightly workflow is inert (account shadowed). The live mechanism is the itg-1 cron above.
 
-Nightly pushes use `GITHUB_TOKEN` and do not trigger `pages.yml`; the nightly job deploys Pages directly.
+The legacy workflows (inert):
 
-After the first successful nightly run, disable the legacy Hermes OpenCrabs cron job (`6da1f200`) if it is still enabled.
+| Workflow | Defined trigger | Status |
+|----------|----------------|--------|
+| [`nightly-update.yml`](.github/workflows/nightly-update.yml) | Cron `0 3 * * *` UTC, `workflow_dispatch` | ⛔ inert (Actions off) |
+| [`pages.yml`](.github/workflows/pages.yml) | Push/PR to `main` | ⛔ inert (Pages off) |
 
 ## Development
 
