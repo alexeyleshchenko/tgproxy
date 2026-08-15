@@ -4,6 +4,7 @@ Update Telegram proxy list from @telemtrs Free proxy topic.
 Stores proxies with timestamps: URL|YYYY-MM-DDTHH:MM:SS
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -18,6 +19,10 @@ from urllib.parse import parse_qs, urlparse
 # === CONFIG ===
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
+PROXIES_HASHED_NAME = re.compile(r'^proxies-[0-9a-f]{12}\.txt$')
+INDEX_PROXIES_URL_RE = re.compile(
+    r"(const PROXIES_URL = ')(\./proxies(?:-[0-9a-f]{12})?\.txt)(')"
+)
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
@@ -472,10 +477,49 @@ def write_proxies_atomic(proxies: list):
         with os.fdopen(fd, 'w') as f:
             f.write('\n'.join(lines) + '\n')
         os.replace(tmp_path, PROXIES_FILE)
+        publish_cache_busted_list('\n'.join(lines) + '\n')
     except Exception:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
+
+
+def hashed_proxies_filename(content: str) -> str:
+    digest = hashlib.sha256(content.encode()).hexdigest()[:12]
+    return f'proxies-{digest}.txt'
+
+
+def publish_cache_busted_list(content: str):
+    """
+    GitHub Pages caches same-path files (proxies.txt) across deploys.
+    Publish a content-hashed copy and point index.html at it so browsers
+    and the Pages CDN fetch a new URL after each list change.
+    """
+    docs_dir = os.path.dirname(PROXIES_FILE)
+    busted_name = hashed_proxies_filename(content)
+    busted_path = os.path.join(docs_dir, busted_name)
+    with open(busted_path, 'w') as f:
+        f.write(content)
+
+    for name in os.listdir(docs_dir):
+        if PROXIES_HASHED_NAME.match(name) and name != busted_name:
+            os.unlink(os.path.join(docs_dir, name))
+
+    index_path = os.path.join(docs_dir, 'index.html')
+    if not os.path.isfile(index_path):
+        return
+
+    html = open(index_path).read()
+    updated, n = INDEX_PROXIES_URL_RE.subn(
+        r'\1./' + busted_name + r'\3',
+        html,
+        count=1,
+    )
+    if n != 1:
+        logger.warning('Could not update PROXIES_URL in %s', index_path)
+        return
+    with open(index_path, 'w') as f:
+        f.write(updated)
 
 
 def main():

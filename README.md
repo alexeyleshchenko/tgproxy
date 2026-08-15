@@ -9,7 +9,7 @@ Proxy URLs are collected from the [@telemtrs](https://t.me/telemtrs) channel's "
 1. **Collection** — [`update_proxies.py`](update_proxies.py) runs on GitHub Actions ([`nightly-update.yml`](.github/workflows/nightly-update.yml), cron `0 3 * * *` UTC, plus `workflow_dispatch`). It calls [tg-mcp.l1979.ru](https://tg-mcp.l1979.ru) via HTTP MCP (`get_messages` on topic 16160).
 2. **Processing** — Extract proxy URLs (`tg://proxy?...`, `https://t.me/proxy?...`, socks, killer).
 3. **Merge** — Deduplicate, prefer new URLs from Telegram, keep up to 30 newest entries.
-4. **Publishing** — the workflow commits `docs/proxies.txt` when the list changes and deploys `docs/` to GitHub Pages.
+4. **Publishing** — the workflow commits `docs/` (`proxies.txt`, a content-hashed copy, and `index.html`) when the list changes and deploys to GitHub Pages. The hashed filename busts GitHub Pages CDN and browser cache.
 
 ## Repository Structure
 
@@ -19,7 +19,8 @@ Proxy URLs are collected from the [@telemtrs](https://t.me/telemtrs) channel's "
 │   └── test_update_proxies.py
 ├── docs/
 │   ├── index.html         # Site with proxy list + copy buttons
-│   ├── proxies.txt        # Live proxy URL list
+│   ├── proxies.txt        # Live proxy URL list (stable path)
+│   ├── proxies-<hash>.txt # Same list; unique URL per update (cache bust)
 │   └── CNAME              # tgproxy.l1979.ru
 └── README.md
 ```
@@ -58,7 +59,7 @@ export TG_MCP_BEARER='<your-token>'
 python3 update_proxies.py
 ```
 
-The script updates `docs/proxies.txt` only; commit and push (or run the workflow) to publish.
+The script updates `docs/proxies.txt`, a hashed copy, and the fetch URL in `index.html`; commit and push (or run the workflow) to publish.
 
 ## Hosting
 
@@ -83,6 +84,8 @@ Coverage includes URL regex, timestamps, merge logic, atomic writes, MCP respons
 **`TG_MCP_BEARER is required`:** Set the env var or GitHub secret.
 
 **MCP call failed:** Check token validity and that tg-mcp.l1979.ru is reachable.
+
+**Site shows an old proxy list:** GitHub Pages caches same-path files. Each publish writes `docs/proxies-<hash>.txt` and points `index.html` at it. Hard-refresh once after a new deploy if a CDN still has the previous HTML.
 
 ## License
 

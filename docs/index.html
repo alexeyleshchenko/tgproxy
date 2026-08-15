@@ -327,6 +327,9 @@
     </footer>
 
     <script>
+        // Content-hashed so GitHub Pages / browser cache cannot reuse an old list.
+        const PROXIES_URL = './proxies-d8fcef0d401f.txt';
+
         const MONTHS = [
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'
@@ -426,7 +429,7 @@
             const countEl = document.getElementById('count');
 
             try {
-                const response = await fetch('./proxies.txt');
+                const response = await fetch(PROXIES_URL, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error('Failed to fetch: ' + response.status);
                 }
