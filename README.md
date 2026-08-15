@@ -1,15 +1,15 @@
 # tgproxy
 
-Telegram proxy list published at **tgproxy.l1979.ru** (self-hosted on itg-1 via Caddy — see [Hosting](#hosting))
+Telegram proxy list published at **[tgproxy.l1979.ru](https://tgproxy.l1979.ru)** (GitHub Pages).
 
 Proxy URLs are collected from the [@telemtrs](https://t.me/telemtrs) channel's "Free proxy" forum topic and published daily.
 
 ## How It Works
 
-1. **Collection** — [`update_proxies.py`](update_proxies.py) runs on **itg-1** via a server-side cron (`0 3 * * * /opt/tgproxy/scripts/update.sh`); the GitHub Actions nightly is inert (see [Hosting](#hosting)). It calls [tg-mcp.l1979.ru](https://tg-mcp.l1979.ru) via HTTP MCP (`get_messages` on topic 16160).
+1. **Collection** — [`update_proxies.py`](update_proxies.py) runs on GitHub Actions ([`nightly-update.yml`](.github/workflows/nightly-update.yml), cron `0 3 * * *` UTC, plus `workflow_dispatch`). It calls [tg-mcp.l1979.ru](https://tg-mcp.l1979.ru) via HTTP MCP (`get_messages` on topic 16160).
 2. **Processing** — Extract proxy URLs (`tg://proxy?...`, `https://t.me/proxy?...`, socks, killer).
 3. **Merge** — Deduplicate, prefer new URLs from Telegram, keep up to 30 newest entries.
-4. **Publishing** — on **itg-1**, `update_proxies.py` regenerates `docs/proxies.txt` in place at `/opt/tgproxy/docs`, which the `static-sites` Caddy serves at tgproxy.l1979.ru. (No GitHub Pages — the account is shadowed.)
+4. **Publishing** — the workflow commits `docs/proxies.txt` when the list changes and deploys `docs/` to GitHub Pages.
 
 ## Repository Structure
 
@@ -45,17 +45,7 @@ Both `tg://proxy?...` and `https://t.me/proxy?...` forms are normalized to `tg:/
 
 ### GitHub secret
 
-Add repository secret **`TG_MCP_BEARER`** with the token from Cursor `~/.cursor/mcp.json`:
-
-```json
-"mcpServers": {
-  "telegram": {
-    "headers": { "Authorization": "Bearer <TOKEN>" }
-  }
-}
-```
-
-Use the token value only (no `Bearer ` prefix), or paste the full header — the script strips the prefix.
+Repository secret **`TG_MCP_BEARER`** (set on [alexeyleshchenko/tgproxy](https://github.com/alexeyleshchenko/tgproxy)). Use the token value only (no `Bearer ` prefix), or paste the full header — the script strips the prefix.
 
 ## Local Setup
 
@@ -68,22 +58,15 @@ export TG_MCP_BEARER='<your-token>'
 python3 update_proxies.py
 ```
 
-The script updates `docs/proxies.txt` only; commit and push manually if needed.
+The script updates `docs/proxies.txt` only; commit and push (or run the workflow) to publish.
 
 ## Hosting
 
-> ⚠️ **Self-hosted, not GitHub Pages.** The `leshchenko1979` GitHub account is **shadowed** — GitHub Actions and GitHub Pages are turned off. The `.github/workflows/*.yml` files are kept for reference but **do not run**.
+- **Live site**: [https://tgproxy.l1979.ru](https://tgproxy.l1979.ru) — GitHub Pages from `docs/` on `main`.
+- **Update flow**: Actions [`nightly-update.yml`](.github/workflows/nightly-update.yml) (needs `TG_MCP_BEARER`). Manual: **Actions → Nightly proxy update → Run workflow**.
+- **Pages deploy**: [`pages.yml`](.github/workflows/pages.yml) on push to `main` and `workflow_dispatch`.
 
-- **Live site**: https://tgproxy.l1979.ru (+ mirror `tgproxy-mirror.l1979.ru`) — served by the **`static-sites` Caddy container on itg-1** (`144.31.188.163`) from `/opt/tgproxy/docs` (mounted into Caddy at `/data/tgproxy`).
-- **Update flow (automated, server-side)**: a cron on itg-1 runs `0 3 * * * /opt/tgproxy/scripts/update.sh`, which runs `update_proxies.py` (needs `TG_MCP_BEARER` from `/opt/tgproxy/.env`) and regenerates `docs/proxies.txt` in place; Caddy serves the updated file. To refresh by hand: `ssh itg-1` then run `/opt/tgproxy/scripts/update.sh`.
-- **GitHub Actions is NOT the update mechanism** — the nightly workflow is inert (account shadowed). The live mechanism is the itg-1 cron above.
-
-The legacy workflows (inert):
-
-| Workflow | Defined trigger | Status |
-|----------|----------------|--------|
-| [`nightly-update.yml`](.github/workflows/nightly-update.yml) | Cron `0 3 * * *` UTC, `workflow_dispatch` | ⛔ inert (Actions off) |
-| [`pages.yml`](.github/workflows/pages.yml) | Push/PR to `main` | ⛔ inert (Pages off) |
+The itg-1 Caddy vhost and `0 3 * * * /opt/tgproxy/scripts/update.sh` cron were retired when this repo moved to **alexeyleshchenko**.
 
 ## Development
 
@@ -100,8 +83,6 @@ Coverage includes URL regex, timestamps, merge logic, atomic writes, MCP respons
 **`TG_MCP_BEARER is required`:** Set the env var or GitHub secret.
 
 **MCP call failed:** Check token validity and that tg-mcp.l1979.ru is reachable.
-
-**Logs (local):** `/var/log/tgproxy/update.log` or `~/tgproxy/update.log` as fallback.
 
 ## License
 
