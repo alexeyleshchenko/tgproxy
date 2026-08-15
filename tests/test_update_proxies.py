@@ -17,6 +17,7 @@ from update_proxies import (
     _prefer_candidate,
     extract_proxies,
     get_existing_proxies,
+    hashed_proxies_filename,
     merge_proxies,
     normalize_bearer,
     normalize_to_tg_url,
@@ -566,3 +567,20 @@ class TestWriteProxiesAtomic:
         content = path.read_text()
         assert 'tg://proxy?server=a&port=1&secret=x|2026-01-01T00:00:00' in content
         assert 'tg://proxy?server=b&port=2&secret=y\n' in content
+
+    def test_writes_hashed_copy_and_updates_index(self, tmp_path, monkeypatch):
+        import update_proxies as mod
+        path = tmp_path / 'proxies.txt'
+        index = tmp_path / 'index.html'
+        index.write_text("const PROXIES_URL = './proxies.txt';\n")
+        (tmp_path / 'proxies-aaaaaaaaaaaa.txt').write_text('old\n')
+        monkeypatch.setattr(mod, 'PROXIES_FILE', str(path))
+        proxies = [
+            ('tg://proxy?server=a&port=1&secret=x', '2026-01-01T00:00:00'),
+        ]
+        write_proxies_atomic(proxies)
+        expected = path.read_text()
+        hashed = hashed_proxies_filename(expected)
+        assert (tmp_path / hashed).read_text() == expected
+        assert not (tmp_path / 'proxies-aaaaaaaaaaaa.txt').exists()
+        assert f"const PROXIES_URL = './{hashed}';" in index.read_text()

@@ -4,6 +4,7 @@ Update Telegram proxy list from @telemtrs Free proxy topic.
 Stores proxies with timestamps: URL|YYYY-MM-DDTHH:MM:SS
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -18,14 +19,18 @@ from urllib.parse import parse_qs, urlparse
 # === CONFIG ===
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 PROXIES_FILE = os.path.join(REPO_DIR, 'docs', 'proxies.txt')
+PROXIES_HASHED_NAME = re.compile(r'^proxies-[0-9a-f]{12}\.txt$')
+INDEX_PROXIES_URL_RE = re.compile(
+    r"const PROXIES_URL = '\./proxies(?:-[0-9a-f]{12})?\.txt'"
+)
 TELEGRAM_CHAT = 'telemtrs'
 TOPIC_ID = 16160  # Free proxy forum topic in @telemtrs
 MAX_PROXIES = 30
 TG_MCP_URL = os.environ.get('TG_MCP_URL', 'https://tg-mcp.l1979.ru/v1/mcp')
 MCP_PROTOCOL_VERSION = '2024-11-05'
 PROXY_PATTERN = re.compile(
-    r'https://t\.me/(?:socks|proxy|killer)\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
-    r'|tg://(?:socks|proxy|killer)\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
+    r'(?:https://t\.me/|tg://)(?:socks|proxy|killer)'
+    r'\?server=[^&\s]+&port=\d+&secret=[0-9a-fA-F]+'
 )
 
 # Captures the proxy type keyword (socks/proxy/killer) from either URL scheme.
@@ -36,36 +41,28 @@ root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 root_logger.handlers.clear()
 root_logger.addHandler(logging.StreamHandler(sys.stdout))
-
-LOG_DIR = '/var/log/tgproxy'
-LOG_FILE = os.path.join(LOG_DIR, 'update.log')
-try:
-    os.makedirs(LOG_DIR, exist_ok=True)
-    file_handler = logging.FileHandler(LOG_FILE)
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    ))
-    root_logger.addHandler(file_handler)
-except Exception as primary_err:
-    LOG_FILE = os.path.expanduser('~/tgproxy/update.log')
-    try:
-        os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-        file_handler = logging.FileHandler(LOG_FILE)
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        ))
-        root_logger.addHandler(file_handler)
-    except Exception as fallback_err:
-        print(
-            f'Warning: file logging disabled ({primary_err}; {fallback_err})',
-            file=sys.stderr,
-        )
-
 logger = logging.getLogger(__name__)
+_FILE_LOG_FORMAT = logging.Formatter(
+    '%(asctime)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+
+def _configure_file_logging():
+    """Attach a file handler if a log path is writable. Skip on import (tests)."""
+    errors = []
+    for path in ('/var/log/tgproxy/update.log', os.path.expanduser('~/tgproxy/update.log')):
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            handler = logging.FileHandler(path)
+            handler.setLevel(logging.INFO)
+            handler.setFormatter(_FILE_LOG_FORMAT)
+            root_logger.addHandler(handler)
+            return
+        except Exception as err:
+            errors.append(str(err))
+    print(f'Warning: file logging disabled ({"; ".join(errors)})', file=sys.stderr)
+
 
 _mcp_initialized = False
 
@@ -144,7 +141,7 @@ def _mcp_post(
     bearer: str,
     timeout: int = 120,
     session_id: str | None = None,
-) -> tuple[int, str, dict | None]:
+) -> tuple[int, str, dict | None, str | None]:
     headers = {
         'Authorization': f'Bearer {bearer}',
         'Content-Type': 'application/json',
@@ -255,9 +252,7 @@ def parse_timestamp(msg: dict) -> str:
         return ''
     if isinstance(raw, str):
         try:
-            ts = raw
-            if ts[-1] != 'Z' and '+' not in ts:
-                ts = ts + 'Z'
+            ts = raw if raw.endswith('Z') or '+' in raw else raw + 'Z'
             dt = _to_utc_naive(datetime.fromisoformat(ts.replace('Z', '+00:00')))
             return dt.strftime(TS_FORMAT)
         except Exception:
@@ -324,23 +319,26 @@ def proxy_secret(url: str) -> str:
     return params.get('secret', [''])[0].lower()
 
 
+_URL_RANK_PREFIXES = (
+    'tg://proxy',
+    'https://t.me/proxy',
+    'https://t.me/socks',
+    'https://t.me/killer',
+)
+
+
 def _url_rank(u: str) -> int:
     """Lower is preferred. tg:// proxy links beat https t.me variants."""
-    if u.startswith('tg://proxy'):
-        return 0
-    if u.startswith('https://t.me/proxy'):
-        return 1
-    if u.startswith('https://t.me/socks'):
-        return 2
-    if u.startswith('https://t.me/killer'):
-        return 3
-    return 4
+    for rank, prefix in enumerate(_URL_RANK_PREFIXES):
+        if u.startswith(prefix):
+            return rank
+    return len(_URL_RANK_PREFIXES)
 
 
 def _prefer_candidate(prev_url: str, prev_ts: str, cand_url: str, cand_ts: str) -> bool:
     """Decide whether a candidate entry replaces the stored one for an endpoint.
 
-    Both entries share the same (server, port). The most recent publication wins;
+    Both entries share the same (server, port, type). The most recent publication wins;
     on equal/missing timestamps the more complete (longer) secret wins, then the
     preferred URL form. Collapses secret-rotated duplicates to the freshest,
     fullest entry regardless of the order entries are seen in.
@@ -413,7 +411,7 @@ def merge_proxies(new_proxies: list, existing: list, max_size: int = MAX_PROXIES
     """
     Merge new and existing proxies, keeping at most max_size total.
 
-    Proxies are keyed by (server, port); when the same endpoint appears in both
+    Proxies are keyed by (server, port, type); when the same endpoint appears in both
     lists (e.g. a rotated secret), the more recent / fuller entry wins. Remaining
     slots are filled from existing entries not already present, newest first.
     The result is capped at max_size; when over capacity, the oldest entries
@@ -462,23 +460,60 @@ def write_proxies_atomic(proxies: list):
     """
     dir_name = os.path.dirname(PROXIES_FILE)
     fd, tmp_path = tempfile.mkstemp(dir=dir_name, prefix='.proxies_', suffix='.tmp')
-    lines = []
-    for url, ts in proxies:
-        if ts:
-            lines.append(f'{url}|{ts}')
-        else:
-            lines.append(url)
+    lines = [f'{url}|{ts}' if ts else url for url, ts in proxies]
+    content = '\n'.join(lines) + '\n'
     try:
         with os.fdopen(fd, 'w') as f:
-            f.write('\n'.join(lines) + '\n')
+            f.write(content)
         os.replace(tmp_path, PROXIES_FILE)
+        publish_cache_busted_list(content)
     except Exception:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
 
 
+def hashed_proxies_filename(content: str) -> str:
+    digest = hashlib.sha256(content.encode()).hexdigest()[:12]
+    return f'proxies-{digest}.txt'
+
+
+def publish_cache_busted_list(content: str):
+    """
+    GitHub Pages caches same-path files (proxies.txt) across deploys.
+    Publish a content-hashed copy and point index.html at it so browsers
+    and the Pages CDN fetch a new URL after each list change.
+    """
+    docs_dir = os.path.dirname(PROXIES_FILE)
+    busted_name = hashed_proxies_filename(content)
+    busted_path = os.path.join(docs_dir, busted_name)
+    with open(busted_path, 'w') as f:
+        f.write(content)
+
+    for name in os.listdir(docs_dir):
+        if PROXIES_HASHED_NAME.match(name) and name != busted_name:
+            os.unlink(os.path.join(docs_dir, name))
+
+    index_path = os.path.join(docs_dir, 'index.html')
+    if not os.path.isfile(index_path):
+        return
+
+    with open(index_path) as f:
+        html = f.read()
+    updated, n = INDEX_PROXIES_URL_RE.subn(
+        f"const PROXIES_URL = './{busted_name}'",
+        html,
+        count=1,
+    )
+    if n != 1:
+        logger.warning('Could not update PROXIES_URL in %s', index_path)
+        return
+    with open(index_path, 'w') as f:
+        f.write(updated)
+
+
 def main():
+    _configure_file_logging()
     logger.info('Fetching proxies from Telegram...')
     messages = mcp_call('get_messages', {
         'chat_id': TELEGRAM_CHAT,
@@ -511,7 +546,6 @@ def main():
 
     write_proxies_atomic(combined)
     logger.info('Updated docs/proxies.txt')
-    sys.exit(0)
 
 
 if __name__ == '__main__':
