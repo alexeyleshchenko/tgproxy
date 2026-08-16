@@ -1,8 +1,11 @@
+tg://proxy?server=badboys.xomodz.fit&port=443&secret=ee747fdbf3afc9ddfdc2581a70a4d9b32a626164626f79732e786f6d6f647a2e666974|2026-08-15T20:26:18
+tg://proxy?server=72.56.80.26&port=443&secret=eeeec7506e5edf5759f196670a7c2ddcde676f6f676c652e636f6d|2026-08-15T14:46:10
+tg://proxy?server=ne.koraivpn.cfd&port=443&secret=ee1331019f2aae8e2976167afdb8cfadd06e652e6b6f72616976706e2e636664|2026-08-15T10:27:42
+tg://proxy?server=72.56.102.142&port=443&secret=eeeff16b3e146a2ba92f1e0b7abf21830a676f6f676c652e636f6d|2026-08-15T08:44:32
 tg://proxy?server=rupop.legendaryfm.uk&port=443&secret=ee7176789f11589e676e202f8440a0ba5f7275706f702e6c6567656e64617279666d2e756b|2026-08-14T20:05:01
 tg://proxy?server=45.147.28.139&port=443&secret=ee74800ce2de3966b457dfc27717db52d07a6f6f6d2e7573|2026-08-14T19:18:14
 tg://proxy?server=200.165.234.19&port=443&secret=eeac0c1da09accb0ae080d260d1fadac2f676f6f676c652e636f6d|2026-08-14T18:20:05
 tg://proxy?server=217.144.188.180&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-08-14T16:52:00
-tg://proxy?server=badboys.xomodz.fit&port=443&secret=ee747fdbf3afc9ddfdc2581a70a4d9b32a626164626f79732e786f6d6f647a2e666974|2026-08-14T14:58:05
 tg://proxy?server=pro.kochvpn.pw&port=443&secret=eedddddddddddddddddddddddddddddddd70726f2e6b6f636876706e2e7077|2026-08-14T13:56:56
 tg://proxy?server=prx.fsdeath.abrdns.com&port=443&secret=eef9fcf181d7fad99b1a222485f9cf56a37072782e667364656174682e616272646e732e636f6d|2026-08-14T09:27:55
 tg://proxy?server=150.241.65.252&port=443&secret=eed3df7a5b49da9c9c8d8ea80bbe4819847477697463682e7476|2026-08-13T20:15:33
@@ -24,7 +27,4 @@ tg://proxy?server=fast.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4a
 tg://proxy?server=168.222.254.216&port=443&secret=eef2fd5e69fd3af88e78be585bd4a7fd8d7275747562652e7275|2026-06-22T09:14:09
 tg://proxy?server=super.its-work.ru&port=443&secret=ee726fbbbf8bc37222d0f92a6cac3aacf4636c6f7564666c6172652e636f6d|2026-06-21T09:45:48
 tg://proxy?server=p2.cryptokazancev.ru&port=443&secret=eec3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f870322e63727970746f6b617a616e6365762e7275|2026-06-19T22:54:46
-tg://proxy?server=77.91.70.10&port=4443&secret=ee3421eb34b5c187466d077a4fa0a77a40706574726f766963682e7275|2026-06-19T18:12:40
-tg://proxy?server=77.91.70.10&port=4333&secret=ee3421eb34b5c187466d077a4fa0a77a40706574726f766963682e7275|2026-06-19T18:12:40
-tg://proxy?server=mt2.ddproxy.xyz&port=443&secret=eed7053815b627d7c7552d79dec1e633f5636f6e74726163742e6d6f732e7275|2026-06-19T07:56:42
 tg://proxy?server=secure.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-06T10:24:23
