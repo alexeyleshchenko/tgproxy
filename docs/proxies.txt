@@ -1,3 +1,4 @@
+tg://proxy?server=159.194.230.83&port=443&secret=ee35a30926db252c897d5546fe8aff73546b69636b2e636f6d|2026-08-19T21:37:04
 tg://proxy?server=shared.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-19T04:28:47
 tg://proxy?server=files.xomodz.fit&port=443&secret=ee193449d79cecb12709874df255e39ae966696c65732e786f6d6f647a2e666974|2026-08-18T23:27:57
 tg://proxy?server=45.94.47.152&port=443&secret=ee89f522cad08e73f1d2b50fb5fe360a096f7a6f6f6e2e7275|2026-08-18T19:49:22
@@ -24,7 +25,6 @@ tg://proxy?server=200.165.234.19&port=443&secret=eeac0c1da09accb0ae080d260d1fada
 tg://proxy?server=217.144.188.180&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-08-14T16:52:00
 tg://proxy?server=pro.kochvpn.pw&port=443&secret=eedddddddddddddddddddddddddddddddd70726f2e6b6f636876706e2e7077|2026-08-14T13:56:56
 tg://proxy?server=prx.fsdeath.abrdns.com&port=443&secret=eef9fcf181d7fad99b1a222485f9cf56a37072782e667364656174682e616272646e732e636f6d|2026-08-14T09:27:55
-tg://proxy?server=150.241.65.252&port=443&secret=eed3df7a5b49da9c9c8d8ea80bbe4819847477697463682e7476|2026-08-13T20:15:33
 tg://proxy?server=free.vnespiska.org&port=9443&secret=ee5b1977cd65b2b90aeea9a53a8d1120867461736b666c6f772e65676f722d6465762e7275|2026-07-14T16:26:36
 tg://proxy?server=fast.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-22T11:13:17
 tg://proxy?server=secure.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-06T10:24:23
