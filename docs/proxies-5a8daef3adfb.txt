@@ -1,6 +1,12 @@
+tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-09-11T07:34:50
+tg://proxy?server=171.22.114.255&port=443&secret=ee0395dadb8b8799dc59c0ac8fdbe2a3726f7a6f6e2e7275|2026-09-11T07:34:50
+tg://proxy?server=191.44.114.77&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d6b69636b2e636f6d|2026-09-11T05:27:47
+tg://proxy?server=150.241.87.249&port=443&secret=ee7f2e59eb14ff2cbeb679ca74bfd6d42d7a6f6f6d2e7573|2026-09-11T01:19:51
+tg://proxy?server=171.22.114.173&port=443&secret=ee4ffcf6088fa708d2b11d752fc91ddc036d2e6265626f6f2e7275|2026-09-10T21:50:12
+tg://proxy?server=45.12.239.124&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-09-10T16:34:56
+tg://proxy?server=150.241.87.239&port=443&secret=eeb5ba39ed5731a04497690ed67f356d247a6f6f6d2e7573|2026-09-10T14:54:10
 tg://proxy?server=168.222.254.186&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d6b69636b2e636f6d|2026-09-10T05:17:02
 tg://proxy?server=193.233.211.59&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496d2e6265626f6f2e7275|2026-09-09T20:29:41
-tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-09-09T20:29:20
 tg://proxy?server=193.233.211.58&port=443&secret=ee8ba5bd8f6b8d1d831b4a9356a9b080f26f7a6f6e2e7275|2026-09-09T20:29:20
 tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe73746f72652e737465616d706f77657265642e636f6d|2026-09-09T19:47:00
 tg://proxy?server=l01.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe6c30312e616e74656e6e612d6d7a742e6c697665|2026-09-09T19:47:00
@@ -13,13 +19,7 @@ tg://proxy?server=150.241.87.28&port=443&secret=eea339ca5cc76d3f7946a1356a63f094
 tg://proxy?server=217.144.186.190&port=443&secret=ee3cfa721bfc05f8a6116b96e1c33d32a56d2e6265626f6f2e7275|2026-09-08T07:44:24
 tg://proxy?server=109.107.190.101&port=443&secret=eedb691e227994c63bffac62939b02308d6f7a6f6e2e7275|2026-09-08T07:44:04
 tg://proxy?server=31.128.47.93&port=443&secret=ee0dbf98440246f4b9228dd2b704256cad6f7a6f6e2e7275|2026-09-07T17:57:50
-tg://proxy?server=2.27.14.150&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d6b69636b2e636f6d|2026-09-07T16:28:40
 tg://proxy?server=62.113.111.70&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-09-07T12:14:19
-tg://proxy?server=myrevive.duckdns.org&port=443&secret=ee3c8fb8a1520baeafef798900f14f6f037477697463682e7476|2026-09-07T07:15:22
-tg://proxy?server=150.241.87.58&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d6b69636b2e636f6d|2026-09-07T05:43:57
-tg://proxy?server=178.236.245.218&port=443&secret=ee68ae8284982465dfcb198342d01cdedb6f7a6f6e2e7275|2026-09-07T04:36:19
-tg://proxy?server=62.60.229.89&port=443&secret=eef1c2c48267de1f01b6d5915717bdf5f36f7a6f6e2e7275|2026-09-07T04:33:39
-tg://proxy?server=159.194.210.249&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-09-06T20:00:51
 tg://proxy?server=reborn.rebirthconnect.com&port=443&secret=eeabb5c5430f2510e43863f9b6284f97b37265626f726e2e72656269727468636f6e6e6563742e636f6d|2026-09-06T19:59:42
 tg://proxy?server=mesh.eeluma.org&port=443&secret=eedcaae509a2455bbfc6165f1708fd5c586d6573682e65656c756d612e6f7267|2026-09-06T09:12:28
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
