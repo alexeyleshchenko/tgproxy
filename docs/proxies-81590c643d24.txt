@@ -1,6 +1,7 @@
+tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-03T01:12:53
+tg://proxy?server=5.35.89.80&port=443&secret=ee0f6551d609d3a63e525a6ba0a6e3ff306f7a6f6e2e7275|2026-10-03T01:12:53
 tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe73746f72652e737465616d706f77657265642e636f6d|2026-10-02T08:25:23
 tg://proxy?server=l01.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe6c30312e616e74656e6e612d6d7a742e6c697665|2026-10-02T08:25:23
-tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-02T02:33:49
 tg://proxy?server=155.212.209.22&port=443&secret=ee71fa13a616c63b461ab210a84de8f8e16f7a6f6e2e7275|2026-10-02T02:33:49
 tg://proxy?server=159.194.252.177&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496d2e6265626f6f2e7275|2026-10-02T02:33:22
 tg://proxy?server=reborn.rebirthconnect.com&port=443&secret=eeabb5c5430f2510e43863f9b6284f97b37265626f726e2e72656269727468636f6e6e6563742e636f6d|2026-10-01T12:58:30
@@ -20,7 +21,6 @@ tg://proxy?server=159.194.243.153&port=443&secret=eefc54975077b7f6b146eb97e4e34e
 tg://proxy?server=45.146.91.146&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d6b69636b2e636f6d|2026-09-29T05:25:11
 tg://proxy?server=storage.sharedocs.online&port=443&secret=ee87c598b74482a16f4d25b15d7456f1436d2e6265626f6f2e7275|2026-09-28T11:52:22
 tg://proxy?server=159.194.252.110&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d706f726e6f6d61737465722e636f6d|2026-09-28T09:33:24
-tg://proxy?server=159.194.228.71&port=443&secret=ee6f42fc5c7296d5a37214fcdfa174ba386f7a6f6e2e7275|2026-09-28T07:23:14
 tg://proxy?server=mesh.eeluma.org&port=443&secret=eedcaae509a2455bbfc6165f1708fd5c586d6573682e65656c756d612e6f7267|2026-09-15T13:32:23
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
