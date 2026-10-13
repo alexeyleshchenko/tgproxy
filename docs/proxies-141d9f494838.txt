@@ -1,7 +1,8 @@
+tg://proxy?server=yostavpn.casacam.net&port=443&secret=ee65e2b4d72f5b6dbf24698282d4be7efc796f73746176706e2e6361736163616d2e6e6574|2026-10-13T08:01:33
+tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-13T05:55:44
+tg://proxy?server=92.243.75.247&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496d2e6265626f6f2e7275|2026-10-13T05:55:44
 tg://proxy?server=static.b-telega.shop&port=443&secret=ee9a3f90be73d8392fd072f9860a2699de7374617469632e622d74656c6567612e73686f70|2026-10-12T09:59:14
-tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-12T09:12:44
 tg://proxy?server=2.56.176.82&port=443&secret=eea1d505e3a191cad61739b9cbf17553c36f7a6f6e2e7275|2026-10-12T09:12:44
-tg://proxy?server=yostavpn.casacam.net&port=443&secret=ee65e2b4d72f5b6dbf24698282d4be7efc796f73746176706e2e6361736163616d2e6e6574|2026-10-12T08:53:38
 tg://proxy?server=pub.ultra-fast.cc&port=443&secret=ee522929f8a138c242059bdd6eed0df7dc7075622e756c7472612d666173742e6363|2026-10-12T08:05:10
 tg://proxy?server=edge.turboass.live&port=443&secret=ee51116f4018a2b3dfc9bda286c52afe9f656467652e747572626f6173732e6c697665|2026-10-11T17:11:30
 tg://proxy?server=91.108.242.229&port=443&secret=ee06471735f9091077bc26dd39fb0d95006f7a6f6e2e7275|2026-10-11T08:17:15
@@ -20,7 +21,6 @@ tg://proxy?server=31.128.39.126&port=443&secret=ee6c0924dde70213655a907f6009eed1
 tg://proxy?server=sun.awx.info&port=443&secret=ee31c6f0e15944f8c2c51ee3da9e020f6473756e2e6177782e696e666f|2026-10-03T09:27:04
 tg://proxy?server=5.35.89.80&port=443&secret=ee0f6551d609d3a63e525a6ba0a6e3ff306f7a6f6e2e7275|2026-10-03T01:12:53
 tg://proxy?server=l01.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe6c30312e616e74656e6e612d6d7a742e6c697665|2026-10-02T08:25:23
-tg://proxy?server=155.212.209.22&port=443&secret=ee71fa13a616c63b461ab210a84de8f8e16f7a6f6e2e7275|2026-10-02T02:33:49
 tg://proxy?server=alpha.sexycapybara.xyz&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-30T08:20:20
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
