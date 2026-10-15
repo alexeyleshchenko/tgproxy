@@ -1,4 +1,5 @@
-tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-14T05:08:09
+tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-14T14:09:01
+tg://proxy?server=2.56.177.160&port=443&secret=ee28eb4ef00443b88292b7a37efa908f766f7a6f6e2e7275|2026-10-14T14:09:01
 tg://proxy?server=2.56.176.183&port=443&secret=ee051df5371bb60a53fe8661ec9601514d6f7a6f6e2e7275|2026-10-14T05:08:09
 tg://proxy?server=dns.vdl.lat&port=443&secret=eece59031f1109f05387b7155534c7ac87646e732e76646c2e6c6174|2026-10-13T18:21:04
 tg://proxy?server=web.gktmfrv.sbs&port=443&secret=ee8d2347ee3bfd6ba6299947017bf28dc16364656b2e7275|2026-10-13T14:13:28
@@ -20,7 +21,6 @@ tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9
 tg://proxy?server=159.194.255.197&port=443&secret=ee6ec5d2a728f3db99d06e89f4fee61cc86f7a6f6e2e7275|2026-10-05T04:50:36
 tg://proxy?server=benz.xomodz.fit&port=443&secret=eeb69204b249bd90a580874ebbe364403c62656e7a2e786f6d6f647a2e666974|2026-10-04T20:19:41
 tg://proxy?server=31.128.39.126&port=443&secret=ee6c0924dde70213655a907f6009eed1e76f7a6f6e2e7275|2026-10-03T20:19:28
-tg://proxy?server=sun.awx.info&port=443&secret=ee31c6f0e15944f8c2c51ee3da9e020f6473756e2e6177782e696e666f|2026-10-03T09:27:04
 tg://proxy?server=alpha.sexycapybara.xyz&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-30T08:20:20
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
