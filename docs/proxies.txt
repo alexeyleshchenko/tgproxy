@@ -1,5 +1,7 @@
+tg://proxy?server=t3.nevcodeframe.com&port=443&secret=ee0e4d933242164450da8a7e6b469b629774332e6e6576636f64656672616d652e636f6d|2026-10-16T21:41:15
+tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-16T17:20:25
+tg://proxy?server=45.118.248.216&port=443&secret=ee4aacd8f13cfa5bd12f04dfe74d2b3b706f7a6f6e2e7275|2026-10-16T17:20:25
 tg://proxy?server=pub.ultra-fast.cc&port=443&secret=eefbf8fe4eaf7bac5100d9cbe9e2c3df587075622e756c7472612d666173742e6363|2026-10-16T07:47:28
-tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-16T06:57:15
 tg://proxy?server=2.56.177.245&port=443&secret=ee41cd7dbf9e6537223575b3c8a36a18996f7a6f6e2e7275|2026-10-16T06:57:15
 tg://proxy?server=2.26.254.126&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d6b69636b2e636f6d|2026-10-16T04:19:42
 tg://proxy?server=2.56.177.160&port=443&secret=ee28eb4ef00443b88292b7a37efa908f766f7a6f6e2e7275|2026-10-14T14:09:01
@@ -19,8 +21,6 @@ tg://proxy?server=155.212.222.55&port=443&secret=ee27659923b602070c7a2525b0f991b
 tg://proxy?server=159.194.251.196&port=443&secret=eed5b40572c7ed8da4aff773154c00ad386f7a6f6e2e7275|2026-10-07T04:50:01
 tg://proxy?server=rf1.data-edge.fyi&port=443&secret=ee4b8b183c13a3c4b63ddf54838b7e52527266312e646174612d656467652e667969|2026-10-06T11:33:18
 tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe73746f72652e737465616d706f77657265642e636f6d|2026-10-05T09:54:39
-tg://proxy?server=159.194.255.197&port=443&secret=ee6ec5d2a728f3db99d06e89f4fee61cc86f7a6f6e2e7275|2026-10-05T04:50:36
-tg://proxy?server=benz.xomodz.fit&port=443&secret=eeb69204b249bd90a580874ebbe364403c62656e7a2e786f6d6f647a2e666974|2026-10-04T20:19:41
 tg://proxy?server=alpha.sexycapybara.xyz&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-30T08:20:20
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
