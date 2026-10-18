@@ -1,3 +1,4 @@
+tg://proxy?server=puppy.sexycapybara.xyz&port=443&secret=eecf0f3fdb7ba38892af4dece6af837750636c6f7564666c6172652e636f6d|2026-10-17T10:28:37
 tg://proxy?server=t3.nevcodeframe.com&port=443&secret=ee0e4d933242164450da8a7e6b469b629774332e6e6576636f64656672616d652e636f6d|2026-10-16T21:41:15
 tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-16T17:20:25
 tg://proxy?server=45.118.248.216&port=443&secret=ee4aacd8f13cfa5bd12f04dfe74d2b3b706f7a6f6e2e7275|2026-10-16T17:20:25
@@ -21,7 +22,6 @@ tg://proxy?server=155.212.222.55&port=443&secret=ee27659923b602070c7a2525b0f991b
 tg://proxy?server=159.194.251.196&port=443&secret=eed5b40572c7ed8da4aff773154c00ad386f7a6f6e2e7275|2026-10-07T04:50:01
 tg://proxy?server=rf1.data-edge.fyi&port=443&secret=ee4b8b183c13a3c4b63ddf54838b7e52527266312e646174612d656467652e667969|2026-10-06T11:33:18
 tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe73746f72652e737465616d706f77657265642e636f6d|2026-10-05T09:54:39
-tg://proxy?server=alpha.sexycapybara.xyz&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-30T08:20:20
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
 tg://proxy?server=shared2.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
