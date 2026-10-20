@@ -1,4 +1,5 @@
-tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-19T08:12:22
+tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-19T12:43:11
+tg://proxy?server=2.56.179.192&port=443&secret=ee99983a01d90639a046e439aad9569fc66f7a6f6e2e7275|2026-10-19T12:43:11
 tg://proxy?server=85.192.31.15&port=443&secret=ee895bd34ab75718b5bd6d2eac543995306f7a6f6e2e7275|2026-10-19T08:12:22
 tg://proxy?server=papaomega.whiskeytangofoxtrot.lol&port=443&secret=ee9902a916e700ce3d6030655cd1fd7f33706170616f6d6567612e776869736b657974616e676f666f7874726f742e6c6f6c|2026-10-18T17:40:24
 tg://proxy?server=puppy.sexycapybara.xyz&port=443&secret=eecf0f3fdb7ba38892af4dece6af837750636c6f7564666c6172652e636f6d|2026-10-17T10:28:37
@@ -21,7 +22,6 @@ tg://proxy?server=141.133.207.29&port=443&secret=eec72c19a93665a8ebaba73ce7beb23
 tg://proxy?server=ultra.mishutkin.click&port=443&secret=eed02e349163d9ea4376a2ae6a94fc550b64726976652e676f6f676c652e636f6d|2026-10-09T08:48:11
 tg://proxy?server=159.194.244.164&port=443&secret=ee504ee0b2ecfe8aefea67699e40c2fdad6f7a6f6e2e7275|2026-10-09T06:36:03
 tg://proxy?server=155.212.222.55&port=443&secret=ee27659923b602070c7a2525b0f991b45e6f7a6f6e2e7275|2026-10-08T04:57:30
-tg://proxy?server=159.194.251.196&port=443&secret=eed5b40572c7ed8da4aff773154c00ad386f7a6f6e2e7275|2026-10-07T04:50:01
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
 tg://proxy?server=shared2.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
