@@ -1,3 +1,5 @@
+tg://proxy?server=uwu.mishutkin.click&port=443&secret=eec21a6ac829a6acfe1077910fc3da1c127577752e6d69736875746b696e2e636c69636b|2026-10-21T17:26:25
+tg://proxy?server=cloud.nocto.online&port=443&secret=ee4c15861636db167e8a958b371ce499f9636c6f75642e6e6f63746f2e6f6e6c696e65|2026-10-21T14:05:36
 tg://proxy?server=194.180.189.39&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-10-20T22:58:56
 tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-10-20T20:39:12
 tg://proxy?server=2.56.179.63&port=443&secret=ee620ddc5d1c1bd7a2b6e3dafb840ffb2f6f7a6f6e2e7275|2026-10-20T20:39:12
@@ -20,8 +22,6 @@ tg://proxy?server=92.243.75.247&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19
 tg://proxy?server=2.56.176.82&port=443&secret=eea1d505e3a191cad61739b9cbf17553c36f7a6f6e2e7275|2026-10-12T09:12:44
 tg://proxy?server=edge.turboass.live&port=443&secret=ee51116f4018a2b3dfc9bda286c52afe9f656467652e747572626f6173732e6c697665|2026-10-11T17:11:30
 tg://proxy?server=91.108.242.229&port=443&secret=ee06471735f9091077bc26dd39fb0d95006f7a6f6e2e7275|2026-10-11T08:17:15
-tg://proxy?server=141.133.207.29&port=443&secret=eec72c19a93665a8ebaba73ce7beb235c46f7a6f6e2e7275|2026-10-09T19:18:19
-tg://proxy?server=ultra.mishutkin.click&port=443&secret=eed02e349163d9ea4376a2ae6a94fc550b64726976652e676f6f676c652e636f6d|2026-10-09T08:48:11
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=meow.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-08-31T08:35:38
 tg://proxy?server=shared2.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
