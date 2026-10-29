@@ -1,4 +1,5 @@
-tg://proxy?server=pub.ultra-fast.cc&port=443&secret=eec028ed8e8528545cfb06404b56f2c6e57075622e756c7472612d666173742e6363|2026-10-26T12:45:44
+tg://proxy?server=pub.ultra-fast.cc&port=443&secret=ee13f5cbda956d421b374d5d7bfa264f617075622e756c7472612d666173742e6363|2026-10-29T06:02:05
+tg://proxy?server=tg.tulip.ex1.click&port=8444&secret=3804fc2c995399a125a544caa43cb065|2026-10-28T18:19:49
 tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe73746f72652e737465616d706f77657265642e636f6d|2026-10-26T01:56:09
 tg://proxy?server=static.b-telega.shop&port=443&secret=eec9f4da3fdfbfccdb13cd63d487b4804273746f72652e737465616d706f77657265642e636f6d|2026-10-23T19:22:29
 tg://proxy?server=uwu.mishutkin.click&port=443&secret=eec21a6ac829a6acfe1077910fc3da1c127577752e6d69736875746b696e2e636c69636b|2026-10-21T17:26:25
@@ -22,7 +23,6 @@ tg://proxy?server=yostavpn.casacam.net&port=443&secret=ee65e2b4d72f5b6dbf2469828
 tg://proxy?server=92.243.75.247&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496d2e6265626f6f2e7275|2026-10-13T05:55:44
 tg://proxy?server=2.56.176.82&port=443&secret=eea1d505e3a191cad61739b9cbf17553c36f7a6f6e2e7275|2026-10-12T09:12:44
 tg://proxy?server=edge.turboass.live&port=443&secret=ee51116f4018a2b3dfc9bda286c52afe9f656467652e747572626f6173732e6c697665|2026-10-11T17:11:30
-tg://proxy?server=91.108.242.229&port=443&secret=ee06471735f9091077bc26dd39fb0d95006f7a6f6e2e7275|2026-10-11T08:17:15
 tg://proxy?server=telega.its-work.ru&port=443&secret=ee368601a36ebfafec1604dd8ad6c2d1eb636c6f7564666c6172652e636f6d|2026-09-01T08:12:15
 tg://proxy?server=shared2.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
 tg://proxy?server=shared1.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
