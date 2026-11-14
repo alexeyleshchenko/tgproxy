@@ -1,7 +1,9 @@
+tg://proxy?server=pub.ultra-fast.cc&port=443&secret=eee06e1fa104262edaf6e277bd75a0f79c7075622e756c7472612d666173742e6363|2026-11-13T19:09:28
+tg://proxy?server=tg6.turboass.live&port=443&secret=ee7dc49d6324c1013b0f53382ef12cc1107467362e747572626f6173732e6c697665|2026-11-13T17:16:50
+tg://proxy?server=tg5.turboass.live&port=31437&secret=ee688b69f9f566d0d5413e71c02f5226df7467352e747572626f6173732e6c697665|2026-11-13T17:16:50
 tg://proxy?server=netproxystopudovo.duckdns.org&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d65626c796174696368746f626c79612e6e6574|2026-11-12T20:12:27
 tg://proxy?server=noproxy.duckdns.org&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d65626c796174696368746f626c79612e6e6574|2026-11-12T20:07:32
 tg://proxy?server=n25dfae.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-11T16:25:10
-tg://proxy?server=pub.ultra-fast.cc&port=443&secret=eeb169ade6f9f74fc28438d9a4d7627b827075622e756c7472612d666173742e6363|2026-11-11T15:11:45
 tg://proxy?server=chestno.servera-dlya-tg-zdes-net.abrdns.com&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-11-11T13:40:40
 tg://proxy?server=edge.turboass.live&port=443&secret=ee51116f4018a2b3dfc9bda286c52afe9f656467652e747572626f6173732e6c697665|2026-11-11T01:54:34
 tg://proxy?server=217.144.187.152&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d65626c796174696368746f626c79612e6e6574|2026-11-10T17:18:34
@@ -23,8 +25,6 @@ tg://proxy?server=static.b-telega.shop&port=443&secret=eec9f4da3fdfbfccdb13cd63d
 tg://proxy?server=185.125.103.55&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-11-07T09:29:02
 tg://proxy?server=185.125.103.54&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-11-07T09:28:53
 tg://proxy?server=171.22.128.224&port=443&secret=eeb04788e588449aaea9c0024f70659fe06d2e6265626f6f2e7275|2026-11-07T08:47:33
-tg://proxy?server=167.94.163.250&port=443&secret=eeb04788e588449aaea9c0024f70659fe06d2e6265626f6f2e7275|2026-11-05T10:09:48
-tg://proxy?server=fast.proxynet.tech&port=443&secret=7|2026-11-05T08:10:06
 tg://proxy?server=n857f86.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-04T12:54:48
 tg://proxy?server=shared.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
 tg://proxy?server=fast.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-22T11:13:17
