@@ -1,3 +1,4 @@
+tg://proxy?server=n2072c0.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-19T08:56:57
 tg://proxy?server=static.b-telega.shop&port=443&secret=eec9f4da3fdfbfccdb13cd63d487b4804273746f72652e737465616d706f77657265642e636f6d|2026-11-18T08:15:24
 tg://proxy?server=n872988.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-17T08:57:24
 tg://proxy?server=pub.ultra-fast.cc&port=443&secret=ee020e97412a4640a060f203c5ab8dc3d47075622e756c7472612d666173742e6363|2026-11-16T19:52:17
@@ -25,6 +26,5 @@ tg://proxy?server=109.120.140.59&port=443&secret=ee73e31720c0c2bfe8dc3eb8e67b59c
 tg://proxy?server=45.150.32.197&port=443&secret=eeb04788e588449aaea9c0024f70659fe06d2e6265626f6f2e7275|2026-11-07T19:54:52
 tg://proxy?server=185.125.103.55&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-11-07T09:29:02
 tg://proxy?server=185.125.103.54&port=443&secret=eea65c7fc5a0d5669ba371a7ca88fc19496f7a6f6e2e7275|2026-11-07T09:28:53
-tg://proxy?server=171.22.128.224&port=443&secret=eeb04788e588449aaea9c0024f70659fe06d2e6265626f6f2e7275|2026-11-07T08:47:33
 tg://proxy?server=shared.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
 tg://proxy?server=fast.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-22T11:13:17
