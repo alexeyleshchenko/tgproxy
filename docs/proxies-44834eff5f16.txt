@@ -1,3 +1,6 @@
+tg://proxy?server=mt-sw.alex-photo-notes.pl&port=443&secret=ee7747076fca6590cda4eb2cff3b4464ee7777772e676f6f676c652e636f6d|2026-11-22T20:15:39
+tg://proxy?server=files.turboproxy.pro&port=443&secret=ee54343255ab98757f191840569f1a9b2966696c65732e747572626f70726f78792e70726f|2026-11-22T13:20:26
+tg://proxy?server=dl.turboproxy.pro&port=443&secret=ee54343255ab98757f191840569f1a9b29646c2e747572626f70726f78792e70726f|2026-11-22T13:20:13
 tg://proxy?server=cdn.turboass.live&port=443&secret=ee51116f4018a2b3dfc9bda286c52afe9f656467652e747572626f6173732e6c697665|2026-11-21T19:19:42
 tg://proxy?server=pub.ultra-fast.cc&port=443&secret=eedbdd3d27e10c3100b9217c3643ea11f57075622e756c7472612d666173742e6363|2026-11-21T13:07:54
 tg://proxy?server=n8bce97.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-21T12:17:44
@@ -23,8 +26,5 @@ tg://proxy?server=mt4.leeroy.uz&port=443&secret=eede199cd5cc7674e522ef10f4359224
 tg://proxy?server=mt3.leeroy.uz&port=443&secret=eede199cd5cc7674e522ef10f4359224d36d2e6265626f6f2e7275|2026-11-08T18:45:38
 tg://proxy?server=mt2.leeroy.uz&port=443&secret=eede199cd5cc7674e522ef10f4359224d36d2e6265626f6f2e7275|2026-11-08T18:45:37
 tg://proxy?server=mt1.leeroy.uz&port=443&secret=eede199cd5cc7674e522ef10f4359224d36d2e6265626f6f2e7275|2026-11-08T18:45:35
-tg://proxy?server=185.203.7.190&port=443&secret=ee3c39d5dc3a798e48fe193f3d3e688aa16d2e6265626f6f2e7275|2026-11-08T15:23:52
-tg://proxy?server=w1.travobet.site&port=9443&secret=ee78db693a0d664a63b9f52b095314b270706574726f766963682e7275|2026-11-08T12:52:14
-tg://proxy?server=n25a995.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-08T10:23:22
 tg://proxy?server=shared.ddproxy.xyz&port=443&secret=eedddddddddddddddddddddddddddddddd6d2e6265626f6f2e7275|2026-08-21T12:21:40
 tg://proxy?server=fast.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-22T11:13:17
