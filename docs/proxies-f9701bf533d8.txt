@@ -1,3 +1,5 @@
+tg://proxy?server=6.travobet.site&port=9443&secret=ee78db693a0d664a63b9f52b095314b2706d61782e7275|2026-11-28T10:31:51
+tg://proxy?server=connect.lero.one&port=443&secret=ee2f25099ee2913cd5796afa4482c0bca46d2e6265626f6f2e7275|2026-11-28T10:08:43
 tg://proxy?server=pub.ultra-fast.cc&port=443&secret=ee1e4acd94264a065fa769b957d4d6e63d7075622e756c7472612d666173742e6363|2026-11-27T08:12:52
 tg://proxy?server=vothernyasobachka.duckdns.org&port=443&secret=eea339ca5cc76d3f7946a1356a63f0947d766f746865726e7961736f626163686b612e6475636b646e732e6f7267|2026-11-27T05:30:27
 tg://proxy?server=7.travobet.site&port=9443&secret=ee78db693a0d664a63b9f52b095314b2706d61782e7275|2026-11-26T17:45:47
@@ -24,7 +26,5 @@ tg://proxy?server=edge.turboass.live&port=443&secret=ee51116f4018a2b3dfc9bda286c
 tg://proxy?server=n2072c0.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-19T08:56:57
 tg://proxy?server=n872988.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-17T08:57:24
 tg://proxy?server=netproxystopudovo.duckdns.org&port=443&secret=ee1b973e200dcea9ee63291d21612846f57469636f626c796f6875656c612e6e6574|2026-11-16T07:47:37
-tg://proxy?server=static.antenna-mzt.live&port=443&secret=ee5a42e3752e724f2fdae9c117e7f076fe73746f72652e737465616d706f77657265642e636f6d|2026-11-14T12:06:41
-tg://proxy?server=tg6.turboass.live&port=443&secret=ee7dc49d6324c1013b0f53382ef12cc1107467362e747572626f6173732e6c697665|2026-11-13T17:16:50
 tg://proxy?server=n25dfae.lumenpost.top&port=443&secret=ee64d43c980c08b82856137ac74cb331fb6d2e6c756d656e706f73742e746f70|2026-11-11T16:25:10
 tg://proxy?server=fast.mtp.mom&port=443&secret=ee3f8a91c2d7e04b6a9f12c5e8370bd4aa786170692e6f7a6f6e2e7275|2026-06-22T11:13:17
